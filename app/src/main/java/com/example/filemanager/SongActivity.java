@@ -86,14 +86,22 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             int songDuration= songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
 
+
             do {
                 String currentName = songCursor.getString(songName);
+                Log.d("HieuNV", "Name: " + currentName);
                 String currentArtist = songCursor.getString(songArtist);
+                Log.d("HieuNV", "Artist: " + currentArtist);
                 String currentPath = songCursor.getString(songPath);
+                Log.d("HieuNV", "Path: " + currentPath);
                 long currentSize = songCursor.getLong(songSize);
+                Log.d("HieuNV", "Size: " + currentSize);
                 long currentDate = songCursor.getLong(songDate);
-                int currentDuration = songCursor.getInt(songDuration);
+                Log.d("HieuNV", "Date " + currentDate);
+                long currentDuration = songCursor.getLong(songDuration);
+                Log.d("HieuNV", "Duration " + currentDuration);
                 long currentImage = songCursor.getLong(songImage);
+                Log.d("HieuNV", "ImageSong: " + currentImage);
 
                 arrayList.add(new Song(currentImage, currentName, currentArtist, currentPath, currentSize, currentDate, currentDuration));
             } while (songCursor.moveToNext());
@@ -271,6 +279,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date_song.setText(sdf.format(song.getDate()));
+
+        //tv_duration_song.setText();
 
         Window window = dialog.getWindow();
         if (window == null) {

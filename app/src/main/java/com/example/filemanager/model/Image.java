@@ -1,6 +1,5 @@
 package com.example.filemanager.model;
 
-import android.util.Log;
 
 import java.io.Serializable;
 
@@ -10,12 +9,14 @@ public class Image implements Serializable {
     long size;
     long date;
     int resolution;
+    String displayName;
 
-    public Image(String path, String title, long size, long date) {
+    public Image(String path, String title, long size, long date, String displayName) {
         this.path = path;
         this.title = title;
         this.size = size;
         this.date = date;
+        this.displayName = displayName;
     }
 
     public String getPath() {
@@ -56,5 +57,13 @@ public class Image implements Serializable {
 
     public void setResolution(int resolution) {
         this.resolution = resolution;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 }

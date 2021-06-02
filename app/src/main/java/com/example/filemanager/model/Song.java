@@ -1,15 +1,15 @@
 package com.example.filemanager.model;
 
 public class Song {
-    Long imageSong;
     String nameSong;
-    String artistSong;
     String path;
     long size;
+    Long imageSong;
+    String artistSong;
     long date;
-    int duration;
+    long duration;
 
-    public Song(Long imageSong, String nameSong, String artistSong, String path, long size, long date, int duration) {
+    public Song(Long imageSong, String nameSong, String artistSong, String path, long size, long date, long duration) {
         this.imageSong = imageSong;
         this.nameSong = nameSong;
         this.artistSong = artistSong;
@@ -67,7 +67,7 @@ public class Song {
         this.date = date;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
