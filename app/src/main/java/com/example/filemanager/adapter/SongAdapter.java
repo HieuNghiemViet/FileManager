@@ -63,6 +63,13 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
                 .load(getAlbumArtURI(song.getImageSong()))
                 .into(holder.ivSong);
 
+        holder.ivSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.onClick(position);
+            }
+        });
+
         holder.ivSong.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {

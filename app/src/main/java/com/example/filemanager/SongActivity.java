@@ -7,7 +7,6 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
@@ -16,33 +15,28 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.format.DateFormat;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.filemanager.adapter.SongAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
-import com.example.filemanager.model.Image;
 import com.example.filemanager.model.Song;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class SongActivity extends AppCompatActivity implements OnItemClickListener {
     private int EDIT_REQUEST_CODE = 111;
@@ -57,6 +51,9 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     private TextView tv_size_song;
     private TextView tv_date_song;
     private TextView tv_duration_song;
+    private TextView tv_rename_cancel;
+    private TextView tv_rename_ok;
+    private TextView edt_rename;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +103,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 long currentImage = songCursor.getLong(songImage);
                 String currentDisplay = songCursor.getString(songDisplay);
 
-            Log.d("HieuNV", "sizeSong: " + currentSize);
+                Log.d("HieuNV", "sizeSong: " + currentSize);
                 arrayList.add(new Song(currentImage, currentName, currentArtist, currentPath, currentSize, currentDate, currentDuration, currentDisplay));
 
             } while (songCursor.moveToNext());
@@ -115,6 +112,10 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
     @Override
     public void onClick(int position) {
+        songtmp = arrayList.get(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songtmp.getPath()));
+        intent.setDataAndType(Uri.parse(songtmp.getPath()), "audio/mp3");
+        startActivity(intent);
     }
 
     @Override
@@ -149,64 +150,64 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void renameSong(int gravity, Song song) {
-//        final Dialog dialog = new Dialog(this);
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        dialog.setContentView(R.layout.layout_dialog_rename_image);
-//
-//        tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
-//        tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);
-//        edt_rename = dialog.findViewById(R.id.edt_rename);
-//        edt_rename.setText(song.getNameSong());
-//
-//        Window window = dialog.getWindow();
-//        if (window == null) {
-//            return;
-//        }
-//        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-//        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-//
-//        WindowManager.LayoutParams windowAttributes = window.getAttributes();
-//        windowAttributes.gravity = gravity;
-//        window.setAttributes(windowAttributes);
-//        dialog.show();
-//
-//        tv_rename_ok.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                String newName = edt_rename.getText().toString();
-////                Log.d("HieuNV", "NEW NAME:  " + newName);
-////                Log.d("HieuNV", "PATH:  " + image.getPath());
-//
-////                File dir = new File(image.getPath());
-////                Log.d("HieuNV", "dir: " + dir);
-////                if (dir.exists()) {
-////                    File from = new File(dir, image.getTitle());
-////                    File to = new File(dir, "newName.jpg");
-////                    if (from.exists()) {
-////                        if (from.renameTo(to)) {
-////                            Toast.makeText(ImageActivity.this,
-////                                    "OK",
-////                                    Toast.LENGTH_LONG).show();
-////                        }
-////                    }
-////                }
-//
-////                String filepath = Environment.getExternalStorageDirectory() + "/DCIM/Camera/";
-////                File from = new File(filepath, image.getTitle());
-////                Log.d("HieuNV", "from: " + image.getTitle());
-////                File to = new File(filepath, "test.jpg");
-////                from.renameTo(to);
-//
-//                dialog.dismiss();
-//            }
-//        });
-//
-//        tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                dialog.dismiss();
-//            }
-//        });
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.layout_dialog_rename);
+
+        tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
+        tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);
+        edt_rename = dialog.findViewById(R.id.edt_rename);
+        edt_rename.setText(song.getNameSong());
+
+        Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+        WindowManager.LayoutParams windowAttributes = window.getAttributes();
+        windowAttributes.gravity = gravity;
+        window.setAttributes(windowAttributes);
+        dialog.show();
+
+        tv_rename_ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String newName = edt_rename.getText().toString();
+                Log.d("HieuNV", "NEW NAME:  " + newName);
+                Log.d("HieuNV", "PATH:  " + song.getPath());
+
+                File dir = new File(song.getPath());
+                Log.d("HieuNV", "dir: " + dir);
+                if (dir.exists()) {
+                    File from = new File(dir, song.getNameSong());
+                    File to = new File(dir, "newName.jpg");
+                    if (from.exists()) {
+                        if (from.renameTo(to)) {
+                            Toast.makeText(SongActivity.this,
+                                    "OK",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+
+                String filepath = Environment.getExternalStorageDirectory() + "/DCIM/Camera/";
+                File from = new File(filepath, song.getNameSong());
+                Log.d("HieuNV", "from: " + song.getNameSong());
+                File to = new File(filepath, "test.jpg");
+                from.renameTo(to);
+
+                dialog.dismiss();
+            }
+        });
+
+        tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
     }
 
     private void shareSong(Song song) {
@@ -238,7 +239,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             long fileId = cursor.getLong(columnIndex);
 
             cursor.close();
-        //    Log.d("HieuNV", "URI: " + Uri.parse(songUri.toString() + "/" + fileId));
+            //    Log.d("HieuNV", "URI: " + Uri.parse(songUri.toString() + "/" + fileId));
             return Uri.parse(songUri.toString() + "/" + fileId);
         } else {
             return null;
@@ -304,8 +305,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         builder.create().show();
     }
 
-    public String getDate(long date){
-        date*=1000L;
+    public String getDate(long date) {
+        date *= 1000L;
         return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
     }
 
@@ -389,7 +390,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             if (resultCode == SongActivity.RESULT_OK) {
                 try {
                     deleteFileUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
-                //    Log.d("HieuNV", "displayName: " + songtmp.getDisplayName());
+                    //    Log.d("HieuNV", "displayName: " + songtmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

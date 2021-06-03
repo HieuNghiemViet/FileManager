@@ -25,7 +25,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -42,7 +41,6 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
@@ -162,7 +160,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private void renameImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.layout_dialog_rename_image);
+        dialog.setContentView(R.layout.layout_dialog_rename);
 
         tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
         tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);

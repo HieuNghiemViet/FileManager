@@ -8,7 +8,6 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
@@ -31,11 +30,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
+
 import com.example.filemanager.adapter.VideoAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 
 import com.example.filemanager.model.Video;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -51,6 +53,10 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_date_video;
     private TextView tv_cancel_dialog_video;
     private Video videotmp;
+    private TextView tv_rename_cancel;
+    private TextView tv_rename_ok;
+    private EditText edt_rename;
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -94,21 +100,26 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 String currentDisplay = videoCursor.getString(videoDisplay);
 
 
-
                 arrayList.add(new Video(currentTitle, currentData, currentSize, currentDuration, currentDate, currentDisplay));
-                Log.d("HieuNV", "currentTitle: " +currentTitle);
-                Log.d("HieuNV", "currentData: " +currentData);
-                Log.d("HieuNV", "currentSize: " +currentSize);
-                Log.d("HieuNV", "currentDate: " +currentDate);
+                Log.d("HieuNV", "currentTitle: " + currentTitle);
+                Log.d("HieuNV", "currentData: " + currentData);
+                Log.d("HieuNV", "currentSize: " + currentSize);
+                Log.d("HieuNV", "currentDate: " + currentDate);
                 //Log.d("HieuNV", "currentDisplay: " +currentDisplay);
             } while (videoCursor.moveToNext());
         }
     }
 
 
-
     @Override
     public void onClick(int position) {
+        //Intent call play other application
+        videotmp = arrayList.get(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videotmp.getPathVideo()));
+        intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/mp4");
+        startActivity(intent);
+
+
     }
 
     @Override
@@ -152,7 +163,37 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         startActivity(Intent.createChooser(shareIntent, "Share"));
     }
 
-    private void renameVideo(int center, Video video) {
+    private void renameVideo(int gravity, Video video) {
+
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.layout_dialog_rename);
+
+        tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
+        tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);
+        edt_rename = dialog.findViewById(R.id.edt_rename);
+        edt_rename.setText(video.getNameVideo());
+
+        Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+        WindowManager.LayoutParams windowAttributes = window.getAttributes();
+        windowAttributes.gravity = gravity;
+        window.setAttributes(windowAttributes);
+        dialog.show();
+
+
+
+        tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
     }
 
     private void cutVideo() {
@@ -175,7 +216,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         tv_size_video.setText(Formatter.formatShortFileSize(dialog.getContext(), video.getSizeVideo()));
 
         tv_date_video.setText(getDate(video.getDateVideo()));
-        
+
         tv_duration_video.setText(convertDuration(video.getDurationVideo()));
 
         Window window = dialog.getWindow();
@@ -199,8 +240,8 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-    public String getDate(long date){
-        date*=1000L;
+    public String getDate(long date) {
+        date *= 1000L;
         return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
     }
 
