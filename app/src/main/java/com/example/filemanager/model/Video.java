@@ -1,27 +1,67 @@
 package com.example.filemanager.model;
 
 public class Video {
-    public String video;
-    public String videoName;
+    private String nameVideo;
+    private String pathVideo;
+    private long sizeVideo;
+    private long durationVideo;
+    private long dateVideo;
+    private String displayName;
 
-    public Video(String video, String videoName) {
-        this.video = video;
-        this.videoName = videoName;
+    public Video(String nameVideo, String pathVideo, long sizeVideo, long durationVideo, long dateVideo, String displayName) {
+        this.nameVideo = nameVideo;
+        this.pathVideo = pathVideo;
+        this.sizeVideo = sizeVideo;
+        this.durationVideo = durationVideo;
+        this.dateVideo = dateVideo;
+        this.displayName = displayName;
     }
 
-    public String getVideo() {
-        return video;
+    public String getNameVideo() {
+        return nameVideo;
     }
 
-    public void setVideo(String video) {
-        this.video = video;
+    public void setNameVideo(String nameVideo) {
+        this.nameVideo = nameVideo;
     }
 
-    public String getVideoName() {
-        return videoName;
+    public String getPathVideo() {
+        return pathVideo;
     }
 
-    public void setVideoName(String videoName) {
-        this.videoName = videoName;
+    public void setPathVideo(String pathVideo) {
+        this.pathVideo = pathVideo;
+    }
+
+    public long getSizeVideo() {
+        return sizeVideo;
+    }
+
+    public void setSizeVideo(long sizeVideo) {
+        this.sizeVideo = sizeVideo;
+    }
+
+    public long getDurationVideo() {
+        return durationVideo;
+    }
+
+    public void setDurationVideo(long durationVideo) {
+        this.durationVideo = durationVideo;
+    }
+
+    public long getDateVideo() {
+        return dateVideo;
+    }
+
+    public void setDateVideo(long dateVideo) {
+        this.dateVideo = dateVideo;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 }

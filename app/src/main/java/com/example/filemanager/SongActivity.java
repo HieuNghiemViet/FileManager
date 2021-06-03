@@ -7,10 +7,14 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.format.DateFormat;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,21 +42,21 @@ import com.example.filemanager.model.Song;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class SongActivity extends AppCompatActivity implements OnItemClickListener {
+    private int EDIT_REQUEST_CODE = 111;
     private ArrayList<Song> arrayList = new ArrayList<>();
+    private Song songtmp;
     private RecyclerView recyclerView;
     private SongAdapter adapter;
     private TextView tv_info_cancel_song;
     private TextView tv_name_song;
+    private TextView tv_name_artist_song;
     private TextView tv_path_song;
     private TextView tv_size_song;
     private TextView tv_date_song;
     private TextView tv_duration_song;
-    private TextView tv_cancel_song;
-    private TextView tv_rename_cancel_song;
-    private TextView tv_rename_ok_song;
-    private EditText edt_rename_song;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +79,12 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
-        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri songUri;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            songUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        } else {
+            songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        }
         Cursor songCursor = contentResolver.query(songUri, null, null, null);
         if (songCursor != null && songCursor.moveToFirst()) {
             int songName = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
@@ -82,41 +92,34 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             int songImage = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
             int songPath = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
             int songSize = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
-            int songDate = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_TAKEN);
-            int songDuration= songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-
-
+            int songDate = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
+            int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+            int songDisplay = songCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
 
             do {
                 String currentName = songCursor.getString(songName);
-                Log.d("HieuNV", "Name: " + currentName);
                 String currentArtist = songCursor.getString(songArtist);
-                Log.d("HieuNV", "Artist: " + currentArtist);
                 String currentPath = songCursor.getString(songPath);
-                Log.d("HieuNV", "Path: " + currentPath);
                 long currentSize = songCursor.getLong(songSize);
-                Log.d("HieuNV", "Size: " + currentSize);
                 long currentDate = songCursor.getLong(songDate);
-                Log.d("HieuNV", "Date " + currentDate);
                 long currentDuration = songCursor.getLong(songDuration);
-                Log.d("HieuNV", "Duration " + currentDuration);
                 long currentImage = songCursor.getLong(songImage);
-                Log.d("HieuNV", "ImageSong: " + currentImage);
+                String currentDisplay = songCursor.getString(songDisplay);
 
-                arrayList.add(new Song(currentImage, currentName, currentArtist, currentPath, currentSize, currentDate, currentDuration));
+            Log.d("HieuNV", "sizeSong: " + currentSize);
+                arrayList.add(new Song(currentImage, currentName, currentArtist, currentPath, currentSize, currentDate, currentDuration, currentDisplay));
+
             } while (songCursor.moveToNext());
         }
     }
 
-
     @Override
     public void onClick(int position) {
-
     }
 
     @Override
     public void onLongClick(int position) {
-        Song songs = arrayList.get(position);
+        songtmp = arrayList.get(position);
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
@@ -126,20 +129,19 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                        infoSong(Gravity.CENTER, songs);
+                        infoSong(Gravity.CENTER, songtmp);
                         break;
                     case 1:
                         cutSong();
                         break;
                     case 2:
-                        renameSong(Gravity.CENTER, songs);
+                        renameSong(Gravity.CENTER, songtmp);
                         break;
                     case 3:
-                        deleteDialog(songs);
-                        deleteSong(songs);
+                        deleteDialog(songtmp);
                         break;
                     case 4:
-                        shareSong(songs);
+                        shareSong(songtmp);
                 }
             }
         });
@@ -213,7 +215,6 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("song/*");
         Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", songFile);
-        Log.d("HieuNV", "img: " + songFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivity(Intent.createChooser(shareIntent, "Share"));
@@ -222,21 +223,61 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     private void cutSong() {
     }
 
-    // DELETE IMAGE FIX
-    private void deleteSong(Song song) {
-        String path = song.getPath();
-        File file = new File(path);
-        // Log.d("HieuNV", " " + file.getAbsolutePath());
-        try {
-            // Log.d("HieuNV", "path: " + path);
-            if (file.exists()) {
-                // Log.d("HieuNV", "exits: true");
-                file.delete();
-                //Log.d("HieuNV", "deleteImage: true");
-            }
-        } catch (Exception e) {
-            Log.d("HieuNV", " " + e);
+    public Uri getUriFromDisplayName(Context context, String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor cursor = context.getContentResolver().query(songUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+        //    Log.d("HieuNV", "URI: " + Uri.parse(songUri.toString() + "/" + fileId));
+            return Uri.parse(songUri.toString() + "/" + fileId);
+        } else {
+            return null;
         }
+    }
+
+    public boolean deleteFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        Uri uri = getUriFromDisplayName(context, displayName);
+        if (uri != null) {
+            final ContentResolver resolver = context.getContentResolver();
+            String[] selectionArgsPdf = new String[]{displayName};
+
+            try {
+                if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
+                    arrayList.remove(songtmp);
+                    adapter.notifyDataSetChanged();
+                }
+                return true;
+            } catch (SecurityException securityException) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    RecoverableSecurityException recoverableSecurityException;
+                    if (securityException instanceof RecoverableSecurityException) {
+                        recoverableSecurityException =
+                                (RecoverableSecurityException) securityException;
+                    } else {
+                        throw new RuntimeException(
+                                securityException.getMessage(), securityException);
+                    }
+                    IntentSender intentSender = recoverableSecurityException.getUserAction()
+                            .getActionIntent().getIntentSender();
+                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
+                            null, 0, 0, 0, null);
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+            }
+        }
+        return false;
     }
 
     public void deleteDialog(Song song) {
@@ -246,9 +287,11 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        deleteSong(song);
-                        arrayList.remove(song);
-                        adapter.notifyDataSetChanged();
+                        try {
+                            deleteFileUsingDisplayName(SongActivity.this, song.getDisplayName());
+                        } catch (IntentSender.SendIntentException e) {
+                            e.printStackTrace();
+                        }
                         dialog.dismiss();
                     }
                 })
@@ -261,6 +304,11 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         builder.create().show();
     }
 
+    public String getDate(long date){
+        date*=1000L;
+        return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
+    }
+
     private void infoSong(int gravity, Song song) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -268,19 +316,20 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
         tv_info_cancel_song = dialog.findViewById(R.id.tv_cancel_song);
         tv_name_song = dialog.findViewById(R.id.tv_nameSong);
+        tv_name_artist_song = dialog.findViewById(R.id.tv_ArtistSong);
         tv_path_song = dialog.findViewById(R.id.tv_pathSong);
         tv_size_song = dialog.findViewById(R.id.tv_sizeSong);
         tv_date_song = dialog.findViewById(R.id.tv_daySong);
         tv_duration_song = dialog.findViewById(R.id.tv_durationSong);
 
         tv_name_song.setText(song.getNameSong());
+        tv_name_artist_song.setText(song.getArtistSong());
         tv_path_song.setText(song.getPath());
         tv_size_song.setText(Formatter.formatShortFileSize(dialog.getContext(), song.getSize()));
 
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
-        tv_date_song.setText(sdf.format(song.getDate()));
+        tv_date_song.setText(getDate(song.getDate()));
 
-        //tv_duration_song.setText();
+        tv_duration_song.setText(convertDuration(song.getDuration()));
 
         Window window = dialog.getWindow();
         if (window == null) {
@@ -301,5 +350,50 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 dialog.dismiss();
             }
         });
+    }
+
+    public String convertDuration(long duration) {
+        String out = null;
+        long hours = 0;
+        try {
+            hours = (duration / 3600000);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return out;
+        }
+        long remaining_minutes = (duration - (hours * 3600000)) / 60000;
+        String minutes = String.valueOf(remaining_minutes);
+        if (minutes.equals(0)) {
+            minutes = "00";
+        }
+        long remaining_seconds = (duration - (hours * 3600000) - (remaining_minutes * 60000));
+        String seconds = String.valueOf(remaining_seconds);
+        if (seconds.length() < 2) {
+            seconds = "00";
+        } else {
+            seconds = seconds.substring(0, 2);
+        }
+
+        if (hours > 0) {
+            out = hours + ":" + minutes + ":" + seconds;
+        } else {
+            out = minutes + ":" + seconds;
+        }
+        return out;
+
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == EDIT_REQUEST_CODE) {
+            if (resultCode == SongActivity.RESULT_OK) {
+                try {
+                    deleteFileUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
+                //    Log.d("HieuNV", "displayName: " + songtmp.getDisplayName());
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

@@ -119,9 +119,9 @@
         android:id="@+id/tv_resolutionImage"
         android:layout_width="280dp"
         android:layout_height="50dp"
-        app:layout_constraintTop_toTopOf="@id/tv_doPhanGiai"
+        android:gravity="center_vertical"
         app:layout_constraintStart_toEndOf="@id/guideline2"
-        android:gravity="center_vertical"/>
+        app:layout_constraintTop_toTopOf="@id/tv_doPhanGiai" />
 
     <TextView
         android:id="@+id/tv_huy"

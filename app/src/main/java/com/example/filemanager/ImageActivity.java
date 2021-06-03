@@ -32,6 +32,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import com.example.filemanager.adapter.ImageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Image;
@@ -45,8 +46,6 @@ import java.util.Arrays;
 
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
-
-
     private int EDIT_REQUEST_CODE = 123;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
@@ -61,6 +60,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_ok;
     private EditText edt_rename;
     private Image imageTmp;
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +97,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         } else {
             imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
-        //Log.d("HieuNV", "uri: " + imgUri);
 
         Cursor imgCursor = contentResolver.query(imgUri, null, null, null);
         if (imgCursor != null && imgCursor.moveToFirst()) {
@@ -114,8 +113,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 long currentSize = imgCursor.getLong(imgSize);
                 long currentDate = imgCursor.getLong(imgDate);
                 arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay));
-//                Log.d("HieuNV", "Name: " + currentTitle); // TITLE --> Name
-//                Log.d("HieuNV", "Path: " + currentPath);
             } while (imgCursor.moveToNext());
         }
     }
@@ -152,8 +149,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                         break;
                     case 3:
                         deleteDialog(imageTmp);
-
-                        //deleteImage(image);
                         break;
                     case 4:
                         shareImage(imageTmp);
@@ -163,64 +158,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         myBuilder.create().show();
     }
 
-    public boolean deleteFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
-        Uri uri = getUriFromDisplayName(context, displayName);
-        if (uri != null) {
-            final ContentResolver resolver = context.getContentResolver();
-            String[] selectionArgsPdf = new String[]{displayName};
-
-            try {
-                if(resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0){
-                    arrayList.remove(imageTmp);
-                    adapter.notifyDataSetChanged();
-                }
-                return true;
-            } catch (SecurityException securityException) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    RecoverableSecurityException recoverableSecurityException;
-                    if (securityException instanceof RecoverableSecurityException) {
-                        recoverableSecurityException =
-                                (RecoverableSecurityException)securityException;
-                    } else {
-                        throw new RuntimeException(
-                                securityException.getMessage(), securityException);
-                    }
-                    IntentSender intentSender =recoverableSecurityException.getUserAction()
-                            .getActionIntent().getIntentSender();
-                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
-                            null, 0, 0, 0, null);
-                } else {
-                    throw new RuntimeException(
-                            securityException.getMessage(), securityException);
-                }
-            }
-        }
-        return false;
-
-    }
-
-    public Uri getUriFromDisplayName(Context context, String displayName) {
-
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Uri imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        // TODO This will break if we have no matching item in the MediaStore.
-        Cursor cursor = context.getContentResolver().query(imgUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return Uri.parse(imgUri.toString() + "/" + fileId);
-        } else {
-            return null;
-        }
-
-    }
 
     private void renameImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);
@@ -292,7 +229,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("image/jpg");
         Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", imgFile);
-        Log.d("HieuNV", "img: " +imgFile);
+        // Log.d("HieuNV", "img: " + imgFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivity(Intent.createChooser(shareIntent, "Share"));
@@ -301,46 +238,9 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private void cutImage() {
     }
 
-    // DELETE IMAGE FIX
-    private void deleteImage(Image image) {
-        String path = image.getPath();
-        File file = new File(path);
-        // Log.d("HieuNV", " " + file.getAbsolutePath());
-        try {
-            // Log.d("HieuNV", "path: " + path);
-            if (file.exists()) {
-                // Log.d("HieuNV", "exits: true");
-                file.delete();
-                //Log.d("HieuNV", "deleteImage: true");
-            }
-        } catch (Exception e) {
-            Log.d("HieuNV", " " + e);
-        }
-    }
-
-    public void deleteDialog(Image image) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete Image")
-                .setMessage("You Are OK?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        //deleteImage(image);
-                        try {
-                            deleteFileUsingDisplayName(ImageActivity.this, image.getDisplayName());
-                        } catch (IntentSender.SendIntentException e) {
-                            e.printStackTrace();
-                        }
-                        dialog.dismiss();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        builder.create().show();
+    public String getDate(long date) {
+        date *= 1000L;
+        return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
     }
 
     private void infoImage(int gravity, Image image) {
@@ -359,6 +259,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         tv_path.setText(image.getPath());
         tv_size.setText(Formatter.formatShortFileSize(dialog.getContext(), image.getSize()));
 
+        //Fix
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date.setText(sdf.format(image.getDate()));
 
@@ -388,18 +289,96 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
+    public Uri getUriFromDisplayName(Context context, String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Uri imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        Cursor cursor = context.getContentResolver().query(imgUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            // Log.d("HieuNV", "URI: " + Uri.parse(imgUri.toString() + "/" + fileId));
+            return Uri.parse(imgUri.toString() + "/" + fileId);
+        } else {
+            return null;
+        }
+    }
+
+    public boolean deleteFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        Uri uri = getUriFromDisplayName(context, displayName);
+        if (uri != null) {
+            final ContentResolver resolver = context.getContentResolver();
+            String[] selectionArgsPdf = new String[]{displayName};
+
+            try {
+                if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
+                    arrayList.remove(imageTmp);
+                    adapter.notifyDataSetChanged();
+                }
+                return true;
+            } catch (SecurityException securityException) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    RecoverableSecurityException recoverableSecurityException;
+                    if (securityException instanceof RecoverableSecurityException) {
+                        recoverableSecurityException =
+                                (RecoverableSecurityException) securityException;
+                    } else {
+                        throw new RuntimeException(
+                                securityException.getMessage(), securityException);
+                    }
+                    IntentSender intentSender = recoverableSecurityException.getUserAction()
+                            .getActionIntent().getIntentSender();
+                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
+                            null, 0, 0, 0, null);
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+            }
+        }
+        return false;
+    }
+
+    public void deleteDialog(Image image) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Image")
+                .setMessage("You Are OK?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            deleteFileUsingDisplayName(ImageActivity.this, image.getDisplayName());
+                        } catch (IntentSender.SendIntentException e) {
+                            e.printStackTrace();
+                        }
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        builder.create().show();
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                /* Edit request granted; proceed. */
                 try {
                     deleteFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
-            } else {
-                /* Edit request not granted; explain to the user. */
             }
         }
     }

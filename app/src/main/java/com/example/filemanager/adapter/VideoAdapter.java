@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.filemanager.R;
+import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Video;
 
 import java.util.ArrayList;
@@ -17,10 +18,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     private ArrayList<Video> videos;
     private Context context;
+    private OnItemClickListener callback;
 
-    public VideoAdapter(ArrayList<Video> videos, Context context) {
+    public VideoAdapter(ArrayList<Video> videos, Context context, OnItemClickListener callback) {
         this.videos = videos;
         this.context = context;
+        this.callback = callback;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -47,20 +50,21 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(VideoAdapter.ViewHolder holder, int position) {
         Video video = videos.get(position);
-        holder.tv_video.setText(video.getVideoName());
+        holder.tv_video.setText(video.getNameVideo());
 
         Glide.with(context)
-                .load(video.getVideo())
+                .load(video.getPathVideo())
                 .into(holder.iv_video);
 
 
-        // setOnClick de ban intent
-//        holder.iv_video.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                callback.onClick(position);
-//            }
-//        });
+        holder.iv_video.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                callback.onLongClick(position);
+                return false;
+            }
+        });
+
     }
 
     @Override
