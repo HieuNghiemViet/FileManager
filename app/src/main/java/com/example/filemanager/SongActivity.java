@@ -36,6 +36,7 @@ import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Song;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class SongActivity extends AppCompatActivity implements OnItemClickListener {
@@ -310,6 +311,34 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
     }
 
+    public static String dataSizeFormat(long size)
+    {
+        DecimalFormat formater = new DecimalFormat("####.00");
+        if(size < 1024)
+        {
+            return size + "byte";
+        }
+        else if(size < (1 << 20))
+        {
+            float kSize = size >> 10;
+            return formater.format(kSize) + "KB";
+        }
+        else if(size < (1 << 30))
+        {
+            float mSize = size >> 20;
+            return formater.format(mSize) + "MB";
+        }
+        else if(size < (1 << 40))
+        {
+            float gSize = size >> 30;
+            return formater.format(gSize) + "GB";
+        }
+        else
+        {
+            return "size : error";
+        }
+    }
+
     private void infoSong(int gravity, Song song) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -326,7 +355,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         tv_name_song.setText(song.getNameSong());
         tv_name_artist_song.setText(song.getArtistSong());
         tv_path_song.setText(song.getPath());
-        tv_size_song.setText(Formatter.formatShortFileSize(dialog.getContext(), song.getSize()));
+
+        tv_size_song.setText(dataSizeFormat(song.getSize()));
 
         tv_date_song.setText(getDate(song.getDate()));
 

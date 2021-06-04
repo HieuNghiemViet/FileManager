@@ -11,6 +11,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,12 +27,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.filemanager.adapter.ImageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
@@ -41,9 +45,11 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
+    private static Uri extUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private int EDIT_REQUEST_CODE = 123;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
@@ -103,6 +109,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             int imgPath = imgCursor.getColumnIndex(MediaStore.Images.Media.DATA);
             int imgSize = imgCursor.getColumnIndex(MediaStore.Images.Media.SIZE);
             int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+            int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
+
 
             do {
                 String currentTitle = imgCursor.getString(imgTitle);
@@ -110,10 +118,12 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 String currentDisplay = imgCursor.getString(imgDisplay);
                 long currentSize = imgCursor.getLong(imgSize);
                 long currentDate = imgCursor.getLong(imgDate);
-                arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay));
+                long currentID = imgCursor.getLong(imgId);
+                arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID));
             } while (imgCursor.moveToNext());
         }
     }
+
 
     @Override
     public void onClick(int position) {
@@ -156,7 +166,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         myBuilder.create().show();
     }
 
-
     private void renameImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -179,36 +188,12 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         window.setAttributes(windowAttributes);
         dialog.show();
 
-        //File dir = Environment.getExternalStorageDirectory();
-        //Log.d("HieuNV", "dir: " + dir);
 
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String newName = edt_rename.getText().toString();
-//                Log.d("HieuNV", "NEW NAME:  " + newName);
-//                Log.d("HieuNV", "PATH:  " + image.getPath());
 
-//                File dir = new File(image.getPath());
-//                Log.d("HieuNV", "dir: " + dir);
-//                if (dir.exists()) {
-//                    File from = new File(dir, image.getTitle());
-//                    File to = new File(dir, "newName.jpg");
-//                    if (from.exists()) {
-//                        if (from.renameTo(to)) {
-//                            Toast.makeText(ImageActivity.this,
-//                                    "OK",
-//                                    Toast.LENGTH_LONG).show();
-//                        }
-//                    }
-//                }
-
-//                String filepath = Environment.getExternalStorageDirectory() + "/DCIM/Camera/";
-//                File from = new File(filepath, image.getTitle());
-//                Log.d("HieuNV", "from: " + image.getTitle());
-//                File to = new File(filepath, "test.jpg");
-//                from.renameTo(to);
-
+                renameFileUsingDisplayName(ImageActivity.this ,image.getDisplayName());
                 dialog.dismiss();
             }
         });
@@ -221,70 +206,50 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-    private void shareImage(Image image) {
+    public boolean renameFileUsingDisplayName(Context context,String displayName) {
+        try {
+            Long id = getIdFromDisplayName(displayName);
+            Log.d("HieuNV", "id: " + id);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extUri, id);
+            Log.d("HieuNV", "Uri: " + mUri);
 
-        File imgFile = new File(image.getPath());
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("image/jpg");
-        Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", imgFile);
-        // Log.d("HieuNV", "img: " + imgFile);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivity(Intent.createChooser(shareIntent, "Share"));
-    }
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+           // contentResolver.update(mUri, contentValues, null, null);
 
-    private void cutImage() {
-    }
+           // contentValues.clear();
+            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
+            Log.d("HieuNV", "NewName: " + edt_rename.getText().toString());
 
-    public String getDate(long date) {
-        date *= 1000L;
-        return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(date));
-    }
-
-    private void infoImage(int gravity, Image image) {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.layout_dialog_info_image);
-
-        tv_info_image_cancel = dialog.findViewById(R.id.tv_huy);
-        tv_name = dialog.findViewById(R.id.tv_nameImage);
-        tv_path = dialog.findViewById(R.id.tv_pathImage);
-        tv_size = dialog.findViewById(R.id.tv_sizeImage);
-        tv_date = dialog.findViewById(R.id.tv_dayImage);
-        tv_resolution = dialog.findViewById(R.id.tv_resolutionImage);
-
-        tv_name.setText(image.getTitle());
-        tv_path.setText(image.getPath());
-        tv_size.setText(Formatter.formatShortFileSize(dialog.getContext(), image.getSize()));
-
-        //Fix
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
-        tv_date.setText(sdf.format(image.getDate()));
-
-        Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
-        bitmap.getHeight();
-        bitmap.getWidth();
-        tv_resolution.setText(bitmap.getWidth() + " x " + bitmap.getHeight());
-
-        Window window = dialog.getWindow();
-        if (window == null) {
-            return;
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
+            resolver.update(mUri, contentValues, null, null);
+          //  imageTmp.setTitle(edt_rename.getText().toString());
+            adapter.notifyDataSetChanged();
+            return true;
+        } catch (Exception e) {
+            Log.d("HieuNV", "e :" + e);
         }
+        return false;
 
-        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+    }
 
-        WindowManager.LayoutParams windowAttributes = window.getAttributes();
-        windowAttributes.gravity = gravity;
-        window.setAttributes(windowAttributes);
-        dialog.show();
+    public Long getIdFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+        assert cursor != null;
+        cursor.moveToFirst();
 
-        tv_info_image_cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
     }
 
     public Uri getUriFromDisplayName(Context context, String displayName) {
@@ -302,7 +267,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             long fileId = cursor.getLong(columnIndex);
 
             cursor.close();
-            // Log.d("HieuNV", "URI: " + Uri.parse(imgUri.toString() + "/" + fileId));
             return Uri.parse(imgUri.toString() + "/" + fileId);
         } else {
             return null;
@@ -344,6 +308,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         return false;
     }
 
+
     public void deleteDialog(Image image) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete Image")
@@ -368,12 +333,73 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         builder.create().show();
     }
 
+    private void shareImage(Image image) {
+
+        File imgFile = new File(image.getPath());
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/jpg");
+        Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", imgFile);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        startActivity(Intent.createChooser(shareIntent, "Share"));
+    }
+
+    private void cutImage() {
+    }
+
+
+    private void infoImage(int gravity, Image image) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.layout_dialog_info_image);
+
+        tv_info_image_cancel = dialog.findViewById(R.id.tv_huy);
+        tv_name = dialog.findViewById(R.id.tv_nameImage);
+        tv_path = dialog.findViewById(R.id.tv_pathImage);
+        tv_size = dialog.findViewById(R.id.tv_sizeImage);
+        tv_date = dialog.findViewById(R.id.tv_dayImage);
+        tv_resolution = dialog.findViewById(R.id.tv_resolutionImage);
+
+        tv_name.setText(image.getTitle());
+        tv_path.setText(image.getPath());
+        tv_size.setText(Formatter.formatShortFileSize(dialog.getContext(), image.getSize()));
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+        tv_date.setText(sdf.format(image.getDate()));
+
+        Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
+        bitmap.getHeight();
+        bitmap.getWidth();
+        tv_resolution.setText(bitmap.getWidth() + " x " + bitmap.getHeight());
+
+        Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+        WindowManager.LayoutParams windowAttributes = window.getAttributes();
+        windowAttributes.gravity = gravity;
+        window.setAttributes(windowAttributes);
+        dialog.show();
+
+        tv_info_image_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
                     deleteFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
+
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

@@ -40,6 +40,7 @@ import com.example.filemanager.model.Video;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class VideoActivity extends AppCompatActivity implements OnItemClickListener {
     private static final int EDIT_REQUEST_CODE = 1111;
@@ -118,8 +119,6 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videotmp.getPathVideo()));
         intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/mp4");
         startActivity(intent);
-
-
     }
 
     @Override
