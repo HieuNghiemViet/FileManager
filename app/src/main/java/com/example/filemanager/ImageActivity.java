@@ -7,6 +7,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
@@ -50,7 +51,8 @@ import java.util.Collections;
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
     private static Uri extUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
-    private int EDIT_REQUEST_CODE = 123;
+    private int DELETE_REQUEST_CODE = 123;
+    private int RENAME_REQUEST_CODE = 113;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
     private ImageAdapter adapter;
@@ -94,6 +96,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void getImage() {
+        arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
         Uri imgUri;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -111,15 +114,15 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
             int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
 
-
             do {
-                String currentTitle = imgCursor.getString(imgTitle);
+                String currentTitle = imgCursor.getString(imgDisplay);
                 String currentPath = imgCursor.getString(imgPath);
                 String currentDisplay = imgCursor.getString(imgDisplay);
                 long currentSize = imgCursor.getLong(imgSize);
                 long currentDate = imgCursor.getLong(imgDate);
                 long currentID = imgCursor.getLong(imgId);
                 arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID));
+                Log.d("HieuNV", "title: " + currentTitle);
             } while (imgCursor.moveToNext());
         }
     }
@@ -190,10 +193,14 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
 
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-
-                renameFileUsingDisplayName(ImageActivity.this ,image.getDisplayName());
+                try {
+                    renameFileUsingDisplayName(ImageActivity.this, image.getDisplayName());
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
                 dialog.dismiss();
             }
         });
@@ -206,7 +213,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-    public boolean renameFileUsingDisplayName(Context context,String displayName) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdFromDisplayName(displayName);
             Log.d("HieuNV", "id: " + id);
@@ -216,22 +224,38 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
-           // contentResolver.update(mUri, contentValues, null, null);
+           // resolver.update(mUri, contentValues, null, null);//
 
-           // contentValues.clear();
+            contentValues.clear();
             contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
             Log.d("HieuNV", "NewName: " + edt_rename.getText().toString());
 
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
             resolver.update(mUri, contentValues, null, null);
-          //  imageTmp.setTitle(edt_rename.getText().toString());
+            imageTmp.setTitle(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
+            getImage();
             return true;
-        } catch (Exception e) {
-            Log.d("HieuNV", "e :" + e);
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
         }
         return false;
-
     }
 
     public Long getIdFromDisplayName(String displayName) {
@@ -297,7 +321,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                     }
                     IntentSender intentSender = recoverableSecurityException.getUserAction()
                             .getActionIntent().getIntentSender();
-                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
+                    startIntentSenderForResult(intentSender, DELETE_REQUEST_CODE,
                             null, 0, 0, 0, null);
                 } else {
                     throw new RuntimeException(
@@ -307,7 +331,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         }
         return false;
     }
-
 
     public void deleteDialog(Image image) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -334,7 +357,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     }
 
     private void shareImage(Image image) {
-
         File imgFile = new File(image.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("image/jpg");
@@ -346,7 +368,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
     private void cutImage() {
     }
-
 
     private void infoImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);
@@ -393,13 +414,22 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == EDIT_REQUEST_CODE) {
+        if (requestCode == DELETE_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
                     deleteFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
-
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if ((requestCode == RENAME_REQUEST_CODE)) {
+            if (resultCode == Activity.RESULT_OK) {
+                try {
+                    renameFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
