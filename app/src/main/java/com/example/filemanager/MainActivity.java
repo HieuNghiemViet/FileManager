@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageSound;
     private ImageView imageDocuments;
     private ImageView imageApp;
-    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

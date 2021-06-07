@@ -46,7 +46,9 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
@@ -107,15 +109,15 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
 
-        Cursor imgCursor = contentResolver.query(imgUri, null, null, null);
+        Cursor imgCursor = contentResolver.query(imgUri, null, null, null,MediaStore.Images.Media.DATE_ADDED +" DESC");
         if (imgCursor != null && imgCursor.moveToFirst()) {
             int imgTitle = imgCursor.getColumnIndex(MediaStore.Images.Media.TITLE);
             int imgDisplay = imgCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
             int imgPath = imgCursor.getColumnIndex(MediaStore.Images.Media.DATA);
             int imgSize = imgCursor.getColumnIndex(MediaStore.Images.Media.SIZE);
             int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED);
-            int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-            Log.d("Heu", "date :" + imgDate);
+            int imgDateTaken = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+            int imgId = imgCursor.getColumnIndex(MediaStore.Images.Media._ID);
             do {
                 String currentTitle = imgCursor.getString(imgDisplay);
                 String currentPath = imgCursor.getString(imgPath);
@@ -123,8 +125,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 long currentSize = imgCursor.getLong(imgSize);
                 long currentDate = imgCursor.getLong(imgDate);
                 long currentID = imgCursor.getLong(imgId);
-                arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID));
-                Log.d("Heu", "date :" + currentDate  );
+                long currentDateTaken = imgCursor.getLong(imgDateTaken);
+                arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID, currentDateTaken));
             } while (imgCursor.moveToNext());
         }
     }
@@ -219,6 +221,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             Long id = getIdFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extUri, id);
+            Log.d("HieuNV", "mURI: " + mUri);
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
             contentValues.clear();
@@ -226,6 +229,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
             resolver.update(mUri, contentValues, null, null);
+            Log.d("HieuNV", "URI: " + mUri);
             imageTmp.setTitle(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
             getImage();
@@ -382,7 +386,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date.setText(sdf.format(image.getDate() * 1000));
-        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() ));
+        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() * 1000));
 
         Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
         bitmap.getHeight();
@@ -409,6 +413,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

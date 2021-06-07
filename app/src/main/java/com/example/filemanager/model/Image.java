@@ -11,14 +11,16 @@ public class Image implements Serializable {
     int resolution;
     String displayName;
     Long id;
+    long dateTaken;
 
-    public Image(String path, String title, long size, long date, String displayName, Long id) {
+    public Image(String path, String title, long size, long date, String displayName, Long id, Long dateTaken) {
         this.path = path;
         this.title = title;
         this.size = size;
         this.date = date;
         this.displayName = displayName;
         this.id = id;
+        this.dateTaken = dateTaken;
     }
 
     public String getPath() {
@@ -75,5 +77,13 @@ public class Image implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public long getDateTaken() {
+        return dateTaken;
+    }
+
+    public void setDateTaken(long dateTaken) {
+        this.dateTaken = dateTaken;
     }
 }
