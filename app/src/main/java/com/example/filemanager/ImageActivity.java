@@ -51,6 +51,8 @@ import java.util.Collections;
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
     private static Uri extUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    //private static Uri extUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
+
     private int DELETE_REQUEST_CODE = 123;
     private int RENAME_REQUEST_CODE = 113;
     private RecyclerView recyclerView;
@@ -111,9 +113,9 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             int imgDisplay = imgCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
             int imgPath = imgCursor.getColumnIndex(MediaStore.Images.Media.DATA);
             int imgSize = imgCursor.getColumnIndex(MediaStore.Images.Media.SIZE);
-            int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN);
+            int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED);
             int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-
+            Log.d("Heu", "date :" + imgDate);
             do {
                 String currentTitle = imgCursor.getString(imgDisplay);
                 String currentPath = imgCursor.getString(imgPath);
@@ -122,11 +124,10 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 long currentDate = imgCursor.getLong(imgDate);
                 long currentID = imgCursor.getLong(imgId);
                 arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID));
-                Log.d("HieuNV", "title: " + currentTitle);
+                Log.d("Heu", "date :" + currentDate  );
             } while (imgCursor.moveToNext());
         }
     }
-
 
     @Override
     public void onClick(int position) {
@@ -218,7 +219,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             Long id = getIdFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extUri, id);
-
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
             contentValues.clear();
@@ -254,9 +254,10 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
     public Long getIdFromDisplayName(String displayName) {
         String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        projection = new String[]{MediaStore.Files.FileColumns._ID}; // fix
         Cursor cursor = getContentResolver().query(extUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
         assert cursor != null;
         cursor.moveToFirst();
 
@@ -375,12 +376,13 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         tv_date = dialog.findViewById(R.id.tv_dayImage);
         tv_resolution = dialog.findViewById(R.id.tv_resolutionImage);
 
-        tv_name.setText(image.getTitle());
+        tv_name.setText(image.getDisplayName());
         tv_path.setText(image.getPath());
         tv_size.setText(Formatter.formatShortFileSize(dialog.getContext(), image.getSize()));
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
-        tv_date.setText(sdf.format(image.getDate()));
+        tv_date.setText(sdf.format(image.getDate() * 1000));
+        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() ));
 
         Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
         bitmap.getHeight();

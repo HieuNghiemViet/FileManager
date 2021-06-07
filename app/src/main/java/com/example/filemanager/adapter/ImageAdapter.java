@@ -69,7 +69,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-
             }
         });
 

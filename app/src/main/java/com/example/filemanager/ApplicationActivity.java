@@ -46,7 +46,6 @@ public class ApplicationActivity extends AppCompatActivity implements OnItemClic
     private ArrayList<Application> arrayList = new ArrayList<>();
     private ApplicationInfo applicationInfo;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +71,6 @@ public class ApplicationActivity extends AppCompatActivity implements OnItemClic
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
     }
-
 
     public void getApp() throws PackageManager.NameNotFoundException {
         final PackageManager pm = getPackageManager();

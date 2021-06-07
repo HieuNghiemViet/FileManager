@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.filemanager.adapter.DocumentAdapter;
+import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Document;
 
 import java.io.File;
@@ -23,7 +26,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Formatter;
 
-public class DocumentActivity extends AppCompatActivity {
+public class DocumentActivity extends AppCompatActivity implements OnItemClickListener {
     private String documentName;
     private int documentSize;
     private URL documentUrl;
@@ -31,27 +34,31 @@ public class DocumentActivity extends AppCompatActivity {
     private ArrayList<Document> arrayList = new ArrayList<>();
     private DocumentAdapter adapter;
     private RecyclerView recyclerView;
+    private Document document;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_document);
-
-
         try {
             Search_Dir(Environment.getExternalStorageDirectory());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        initView();
+        setDataAdapter();
+    }
 
+    private void initView() {
         recyclerView = (RecyclerView) findViewById(R.id.rcv_document);
-        adapter = new DocumentAdapter(arrayList, this);
+    }
+
+    public void setDataAdapter() {
+        adapter = new DocumentAdapter(arrayList, this, (OnItemClickListener) this);
         recyclerView.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
-
-
     }
 
     public void Search_Dir(File dir) throws IOException {
@@ -93,5 +100,17 @@ public class DocumentActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    @Override
+    public void onClick(int position) {
+        //document = arrayList.get(position);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("file/*");
+        startActivity(intent);
+    }
+
+    @Override
+    public void onLongClick(int position) {
     }
 }
