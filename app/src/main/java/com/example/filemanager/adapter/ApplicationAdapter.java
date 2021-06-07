@@ -1,6 +1,7 @@
 package com.example.filemanager.adapter;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.filemanager.R;
+import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Application;
 import com.example.filemanager.model.Image;
 
@@ -22,10 +24,12 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
 
     private ArrayList<Application> applications;
     private Context context;
+    private OnItemClickListener callback;
 
-    public ApplicationAdapter(ArrayList<Application> applications, Context context) {
+    public ApplicationAdapter(ArrayList<Application> applications, Context context, OnItemClickListener callback) {
         this.applications = applications;
         this.context = context;
+        this.callback = callback;
     }
 
     public class Viewholder extends RecyclerView.ViewHolder {
@@ -58,10 +62,21 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         holder.tv_name_app.setText(application.getNameApp());
         holder.tv_packageName_app.setText(application.getPackageApp());
         holder.tv_size_app.setText(Formatter.formatShortFileSize(context, application.getSizeApp()));
+
         Glide.with(context)
                 .load(application.getImageApp())
                 .into(holder.iv_img_app);
 
+        holder.iv_img_app.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    callback.onClick(position);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override

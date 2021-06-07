@@ -191,7 +191,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         window.setAttributes(windowAttributes);
         dialog.show();
 
-
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
@@ -217,19 +216,14 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     public boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdFromDisplayName(displayName);
-            Log.d("HieuNV", "id: " + id);
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extUri, id);
-            Log.d("HieuNV", "Uri: " + mUri);
 
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
-           // resolver.update(mUri, contentValues, null, null);//
-
             contentValues.clear();
-            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
-            Log.d("HieuNV", "NewName: " + edt_rename.getText().toString());
 
+            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
             resolver.update(mUri, contentValues, null, null);
             imageTmp.setTitle(edt_rename.getText().toString());

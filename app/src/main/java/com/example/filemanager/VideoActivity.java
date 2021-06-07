@@ -12,6 +12,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -43,7 +45,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class VideoActivity extends AppCompatActivity implements OnItemClickListener {
-    private static final int EDIT_REQUEST_CODE = 1111;
+    private static Uri extUri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private int EDIT_REQUEST_CODE = 1111;
+    private int RENAME_REQUEST_CODE = 2222;
     private ArrayList<Video> arrayList = new ArrayList<>();
     private VideoAdapter adapter;
     private RecyclerView rcv_video;
@@ -82,6 +86,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void getVideo() {
+        arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
         Uri videoUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
         Cursor videoCursor = contentResolver.query(videoUri, null, null, null);
@@ -93,13 +98,12 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
             int videoDate = videoCursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
             int videoDisplay = videoCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
             do {
-                String currentTitle = videoCursor.getString(videoTitle);
+                String currentTitle = videoCursor.getString(videoDisplay);
                 String currentData = videoCursor.getString(videoData);
                 long currentSize = videoCursor.getLong(videoSize);
                 long currentDuration = videoCursor.getLong(videoDuration);
                 long currentDate = videoCursor.getLong(videoDate);
                 String currentDisplay = videoCursor.getString(videoDisplay);
-
 
                 arrayList.add(new Video(currentTitle, currentData, currentSize, currentDuration, currentDate, currentDisplay));
                 Log.d("HieuNV", "currentTitle: " + currentTitle);
@@ -114,7 +118,6 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
 
     @Override
     public void onClick(int position) {
-        //Intent call play other application
         videotmp = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videotmp.getPathVideo()));
         intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/mp4");
@@ -163,7 +166,6 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     }
 
     private void renameVideo(int gravity, Video video) {
-
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_rename);
@@ -185,7 +187,18 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         window.setAttributes(windowAttributes);
         dialog.show();
 
-
+        tv_rename_ok.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onClick(View v) {
+                try {
+                    renameFileUsingDisplayName(VideoActivity.this, video.getDisplayName());
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+                dialog.dismiss();
+            }
+        });
 
         tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,6 +206,64 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 dialog.dismiss();
             }
         });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        try {
+            Long id = getIdFromDisplayName(displayName);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extUri, id);
+
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+            contentValues.clear();
+
+            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
+            resolver.update(mUri, contentValues, null, null);
+            videotmp.setNameVideo(edt_rename.getText().toString());
+            adapter.notifyDataSetChanged();
+            getVideo();
+            return true;
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
+        }
+        return false;
+    }
+
+    private Long getIdFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
     }
 
     private void cutVideo() {
@@ -354,12 +425,22 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         builder.create().show();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
                     deleteFileUsingDisplayName(VideoActivity.this, videotmp.getDisplayName());
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if ((requestCode == RENAME_REQUEST_CODE)) {
+            if (resultCode == Activity.RESULT_OK) {
+                try {
+                    renameFileUsingDisplayName(VideoActivity.this, videotmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

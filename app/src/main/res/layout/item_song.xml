@@ -7,10 +7,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:padding="2dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:padding="2dp">
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/iv_img_song"
@@ -27,19 +27,19 @@
                 android:id="@+id/tv_name_song"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:text="ilighning"
-                android:textSize="25dp"
+                android:layout_marginStart="10dp"
                 android:gravity="center_vertical"
-                android:layout_marginStart="10dp"/>
+                android:text="ilighning"
+                android:textSize="25dp" />
 
             <TextView
                 android:id="@+id/tv_artist_song"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:text="unknown"
-                android:textSize="18dp"
+                android:layout_marginStart="10dp"
                 android:gravity="center_vertical"
-                android:layout_marginStart="10dp"/>
+                android:text="unknown"
+                android:textSize="18dp" />
 
         </LinearLayout>
 

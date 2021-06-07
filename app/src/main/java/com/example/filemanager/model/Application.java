@@ -8,7 +8,7 @@ public class Application {
     String packageApp;
     long sizeApp;
 
-    public Application(Drawable imageApp, String nameApp, String packageApp,long sizeApp) {
+    public Application(Drawable imageApp, String nameApp, String packageApp, long sizeApp) {
         this.imageApp = imageApp;
         this.nameApp = nameApp;
         this.packageApp = packageApp;
