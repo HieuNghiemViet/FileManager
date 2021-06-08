@@ -46,7 +46,9 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
@@ -115,7 +117,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             int imgSize = imgCursor.getColumnIndex(MediaStore.Images.Media.SIZE);
             int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED);
             int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-            Log.d("Heu", "date :" + imgDate);
             do {
                 String currentTitle = imgCursor.getString(imgDisplay);
                 String currentPath = imgCursor.getString(imgPath);
@@ -124,7 +125,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 long currentDate = imgCursor.getLong(imgDate);
                 long currentID = imgCursor.getLong(imgId);
                 arrayList.add(new Image(currentPath, currentTitle, currentSize, currentDate, currentDisplay, currentID));
-                Log.d("Heu", "date :" + currentDate  );
             } while (imgCursor.moveToNext());
         }
     }
@@ -382,7 +382,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date.setText(sdf.format(image.getDate() * 1000));
-        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() ));
 
         Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
         bitmap.getHeight();
@@ -409,6 +408,19 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
+
+//    public void sortByDate() {
+//        final File[] sortedByDate = imageTmp.;
+//
+//        if (sortedByDate != null && sortedByDate.length > 1) {
+//            Arrays.sort(sortedByDate, new Comparator<File>() {
+//                @Override
+//                public int compare(File object1, File object2) {
+//                    return (int) ((object1.lastModified() > object2.lastModified()) ? object1.lastModified(): object2.lastModified());
+//                }
+//            });
+//        }
+//    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
