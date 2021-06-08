@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -53,10 +54,9 @@ import java.util.Comparator;
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
     private static Uri extUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
-    //private static Uri extUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
 
     private int DELETE_REQUEST_CODE = 123;
-    private int RENAME_REQUEST_CODE = 113;
+    private int RENAME_REQUEST_CODE = 300;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
     private ImageAdapter adapter;
@@ -70,6 +70,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_ok;
     private EditText edt_rename;
     private Image imageTmp;
+    private SwipeRefreshLayout swipe;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +87,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
     private void initView() {
         recyclerView = (RecyclerView) findViewById(R.id.rcv_image);
+        swipe = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutImage);
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void setDataAdapter() throws ParseException {
@@ -96,6 +97,18 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         recyclerView.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+
+        swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                try {
+                    setDataAdapter();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                swipe.setRefreshing(false);
+            }
+        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -109,14 +122,14 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
 
-        Cursor imgCursor = contentResolver.query(imgUri, null, null, null);
+        Cursor imgCursor = contentResolver.query(imgUri, null, null, null,MediaStore.Images.Media.DATE_MODIFIED +" DESC");
         if (imgCursor != null && imgCursor.moveToFirst()) {
             int imgTitle = imgCursor.getColumnIndex(MediaStore.Images.Media.TITLE);
             int imgDisplay = imgCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
             int imgPath = imgCursor.getColumnIndex(MediaStore.Images.Media.DATA);
             int imgSize = imgCursor.getColumnIndex(MediaStore.Images.Media.SIZE);
             int imgDate = imgCursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED);
-            int imgId = imgCursor.getColumnIndex(MediaStore.Audio.Media._ID);
+            int imgId = imgCursor.getColumnIndex(MediaStore.Images.Media._ID);
             do {
                 String currentTitle = imgCursor.getString(imgDisplay);
                 String currentPath = imgCursor.getString(imgPath);
@@ -225,6 +238,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
+            contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
             imageTmp.setTitle(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
@@ -300,7 +314,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                    arrayList.remove(imageTmp);
+                 //  arrayList.remove(imageTmp);
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -383,6 +397,9 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date.setText(sdf.format(image.getDate() * 1000));
 
+        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() * 1000));
+
+
         Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
         bitmap.getHeight();
         bitmap.getWidth();
@@ -409,18 +426,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-//    public void sortByDate() {
-//        final File[] sortedByDate = imageTmp.;
-//
-//        if (sortedByDate != null && sortedByDate.length > 1) {
-//            Arrays.sort(sortedByDate, new Comparator<File>() {
-//                @Override
-//                public int compare(File object1, File object2) {
-//                    return (int) ((object1.lastModified() > object2.lastModified()) ? object1.lastModified(): object2.lastModified());
-//                }
-//            });
-//        }
-//    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

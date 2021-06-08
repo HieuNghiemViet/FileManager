@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
@@ -55,23 +56,36 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private TextView edt_rename;
+    private SwipeRefreshLayout swipe;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song);
-
+        initView();
         setDataAdapter();
+    }
+
+    private void initView() {
+        recyclerView = (RecyclerView) findViewById(R.id.rcv_song);
+        swipe = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayoutSong);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void setDataAdapter() {
-        recyclerView = (RecyclerView) findViewById(R.id.rcv_song);
         adapter = new SongAdapter(arrayList, this, this);
         getMusic();
         recyclerView.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+
+        swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                setDataAdapter();
+                swipe.setRefreshing(false);
+            }
+        });
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -84,7 +98,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         } else {
             songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         }
-        Cursor songCursor = contentResolver.query(songUri, null, null, null);
+        Cursor songCursor = contentResolver.query(songUri, null, null, null, MediaStore.Audio.Media.DATE_MODIFIED + " DESC");
         if (songCursor != null && songCursor.moveToFirst()) {
             int songName = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);

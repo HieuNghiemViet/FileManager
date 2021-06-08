@@ -76,4 +76,5 @@ public class Image implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
+
 }

@@ -11,7 +11,6 @@ import com.example.filemanager.model.Image;
 
 public class DetailImageActivity extends AppCompatActivity {
     private ImageView iv_image;
-    private Context context;
     private Image image;
 
     @Override
@@ -21,7 +20,6 @@ public class DetailImageActivity extends AppCompatActivity {
         iv_image = (ImageView) findViewById(R.id.iv_image_detail);
         image = (com.example.filemanager.model.Image) getIntent().getSerializableExtra("image");
 
-//        Log.d("HieuNV", "image: " + image);
         Glide.with(this)
                 .load(image.getPath())
                 .into(iv_image);

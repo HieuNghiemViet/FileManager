@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -61,7 +62,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
-
+    private SwipeRefreshLayout swipe;
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -69,18 +70,31 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video);
-
+        initView();
         setDataAdapter();
+    }
+
+    public void initView() {
+        rcv_video = (RecyclerView) findViewById(R.id.rcv_video);
+        swipe = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutVideo);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void setDataAdapter() {
-        rcv_video = (RecyclerView) findViewById(R.id.rcv_video);
+
         adapter = new VideoAdapter(arrayList, this, this);
         getVideo();
         rcv_video.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         rcv_video.setLayoutManager(staggeredGridLayoutManager);
+
+        swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                setDataAdapter();
+                swipe.setRefreshing(false);
+            }
+        });
     }
 
 
@@ -89,7 +103,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
         Uri videoUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-        Cursor videoCursor = contentResolver.query(videoUri, null, null, null);
+        Cursor videoCursor = contentResolver.query(videoUri, null, null, null, MediaStore.Video.Media.DATE_MODIFIED + " DESC");
         if (videoCursor != null && videoCursor.moveToFirst()) {
             int videoTitle = videoCursor.getColumnIndex(MediaStore.Video.Media.TITLE);
             int videoData = videoCursor.getColumnIndex(MediaStore.Video.Media.DATA);
@@ -106,11 +120,6 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 String currentDisplay = videoCursor.getString(videoDisplay);
 
                 arrayList.add(new Video(currentTitle, currentData, currentSize, currentDuration, currentDate, currentDisplay));
-                Log.d("HieuNV", "currentTitle: " + currentTitle);
-                Log.d("HieuNV", "currentData: " + currentData);
-                Log.d("HieuNV", "currentSize: " + currentSize);
-                Log.d("HieuNV", "currentDate: " + currentDate);
-                //Log.d("HieuNV", "currentDisplay: " +currentDisplay);
             } while (videoCursor.moveToNext());
         }
     }

@@ -13,6 +13,7 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -20,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import static android.content.Intent.CATEGORY_LAUNCHER;
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageSound;
     private ImageView imageDocuments;
     private ImageView imageApp;
-    Context context;
+    private ImageView imageStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         imageSound = (ImageView) findViewById(R.id.img_logo_sound);
         imageDocuments = (ImageView) findViewById(R.id.img_logo_documents);
         imageApp = (ImageView) findViewById(R.id.img_logo_app);
-
+        imageStorage = (ImageView) findViewById(R.id.img_logo_storage);
 
         imageLogo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,6 +93,14 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        imageStorage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, StorageActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     public void askForPermission() {
@@ -120,4 +130,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }

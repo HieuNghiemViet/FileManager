@@ -87,21 +87,19 @@ public class ApplicationActivity extends AppCompatActivity implements OnItemClic
         }
     }
 
-    public long getAppSize(Context context, String packageName)
-            throws PackageManager.NameNotFoundException {
+    public long getAppSize(Context context, String packageName) throws PackageManager.NameNotFoundException {
         return (int) new File(context.getPackageManager().getApplicationInfo(
                 packageName, 0).publicSourceDir).length();
     }
 
     @Override
-    public void onClick(int position) throws PackageManager.NameNotFoundException {
+    public void onClick(int position){
         Application application = arrayList.get(position);
         Intent uninstallIntent = new Intent(Intent.ACTION_DELETE);
         uninstallIntent.setData(Uri.parse("package:" + application.getPackageApp()));
         uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
         startActivityForResult(uninstallIntent, DELETE_REQUEST_CODE);
     }
-
 
     @Override
     public void onLongClick(int position) {
