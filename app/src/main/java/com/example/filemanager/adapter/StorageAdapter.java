@@ -1,5 +1,6 @@
 package com.example.filemanager.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -64,7 +66,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public void onBindViewHolder(StorageAdapter.ViewHolder holder, int position) {
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
-        holder.tv_dateFolder.setText((CharSequence) folder.getDateFolder());
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy");
+        holder.tv_dateFolder.setText(sdf.format(folder.getDate() * 1000));
         holder.tv_numberFile.setText(String.valueOf(folder.getNumberFile() + " Files"));
 
 

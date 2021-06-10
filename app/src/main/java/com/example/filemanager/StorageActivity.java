@@ -53,31 +53,16 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     //fix
     public void getFolder() {
-        File extStorageDir = new File(String.valueOf(Environment.getExternalStorageDirectory()));
-        String[] fileList = extStorageDir.list();
-
-        String pathDCIM = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
-        String pathDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        String pathPictures = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
-        String pathMusic = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
-        String pathMovie = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
- //       String pathDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_).getAbsolutePath();
-
-        File mDCIM = new File(pathDCIM);
-        File[] files = mDCIM.listFiles();
-        String lastModDate = new SimpleDateFormat("dd-MM-yyyy").format(new Date(mDCIM.lastModified()));
-
-        //File mDownload = new File(pathDownload);
-        //File[] file = mDownload.listFiles();
-
-
-
-        for (int i = 0; i < fileList.length; i++) {
-            if(files != null) {
-                arrayList.add(new Folder (fileList[i], lastModDate , files.length,null));
-                Log.d("HieuNV", "size: " + fileList.length);
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        //  Log.d("HieuNV", "Path: " + path);
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+        if(files != null) {
+            for (int i = 0; i < files.length; i++) {
+                arrayList.add(new Folder (StorageActivity.this, files[i], files[i].getName(), files.length));
+                Log.d("HieuNV", "size: " + files.length);
                 Log.d("HieuNV", "sizeFile: " + files.length);
-                Log.d("HieuNV", "DATE: " + lastModDate);
+                Log.d("HieuNV", "DATE: " + "lastModDate");
             }
         }
     }
@@ -85,15 +70,19 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     @Override
     public void onClick(int position) {
       //  folder = arrayList.get(position);
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+        String path = arrayList.get(position).getFile().getAbsolutePath();
       //  Log.d("HieuNV", "Path: " + path);
         File directory = new File(path);
         File[] files = directory.listFiles();
      //   Log.d("HieuNV", "Size: "+ files.length);
+        arrayList.clear();
         for (int i = 0; i < files.length; i++)
         {
-      //      Log.d("HieuNV", "FileName:" + files[i].getName());
+            arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName() , files.length));
+            Log.d("HieuNV", "FileName:" + files[i].getName());
         }
+
+        adapter.notifyDataSetChanged();
     }
 
     @Override
