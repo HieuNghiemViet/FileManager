@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         imageSound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -76,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
 
         imageDocuments.setOnClickListener(new View.OnClickListener() {
             @Override

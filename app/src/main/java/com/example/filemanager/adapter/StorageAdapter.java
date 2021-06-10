@@ -18,15 +18,18 @@ import com.example.filemanager.StorageActivity;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHolder> {
 
     private ArrayList<Folder> folders;
     private Context context;
     private OnItemClickListener callback;
+    private List<File> files;
 
-    public StorageAdapter(ArrayList<Folder> folders,Context context ,OnItemClickListener callback) {
+    public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
         this.context = context;
         this.callback = callback;
@@ -61,17 +64,16 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public void onBindViewHolder(StorageAdapter.ViewHolder holder, int position) {
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
+
         holder.tv_dateFolder.setText(folder.getDateFolder());
+
         holder.tv_numberFile.setText(folder.getNumberFile());
+
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
                     callback.onClick(position);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
             }
         });
     }

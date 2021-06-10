@@ -104,10 +104,11 @@ public class DocumentActivity extends AppCompatActivity implements OnItemClickLi
 
     @Override
     public void onClick(int position) {
-        //document = arrayList.get(position);
+     //   document = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("file/*");
+        intent.setType("*/*");
         startActivity(intent);
+
     }
 
     @Override

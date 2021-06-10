@@ -5,7 +5,7 @@ public class Folder {
     private String dateFolder;
     private String numberFile;
 
-    public Folder(String nameFolder) {
+    public Folder(String nameFolder, String dateFolder, String numberFile) {
         this.nameFolder = nameFolder;
         this.dateFolder = dateFolder;
         this.numberFile = numberFile;

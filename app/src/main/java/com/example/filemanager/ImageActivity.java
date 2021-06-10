@@ -122,7 +122,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
 
-        Cursor imgCursor = contentResolver.query(imgUri, null, null, null,MediaStore.Images.Media.DATE_MODIFIED +" DESC");
+        Cursor imgCursor = contentResolver.query(imgUri, null, null, null, MediaStore.Images.Media.DATE_MODIFIED + " DESC");
         if (imgCursor != null && imgCursor.moveToFirst()) {
             int imgTitle = imgCursor.getColumnIndex(MediaStore.Images.Media.TITLE);
             int imgDisplay = imgCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
@@ -314,7 +314,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                 //  arrayList.remove(imageTmp);
+                    arrayList.remove(imageTmp);
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -368,7 +368,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private void shareImage(Image image) {
         File imgFile = new File(image.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("image/jpg");
+        shareIntent.setType("image/jpeg");
         Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", imgFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -425,8 +425,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
-
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)

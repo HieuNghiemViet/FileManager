@@ -2,7 +2,9 @@ package com.example.filemanager.callback;
 
 import android.content.pm.PackageManager;
 
+import java.io.File;
+
 public interface OnItemClickListener {
-    void onClick(int position) throws PackageManager.NameNotFoundException;
+    void onClick(int position);
     void onLongClick(int position);
 }
