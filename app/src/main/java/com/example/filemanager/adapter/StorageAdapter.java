@@ -20,6 +20,7 @@ import com.example.filemanager.model.Folder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHolder> {
@@ -27,7 +28,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private ArrayList<Folder> folders;
     private Context context;
     private OnItemClickListener callback;
-    private List<File> files;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -64,10 +64,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public void onBindViewHolder(StorageAdapter.ViewHolder holder, int position) {
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
-
-        holder.tv_dateFolder.setText(folder.getDateFolder());
-
-        holder.tv_numberFile.setText(folder.getNumberFile());
+        holder.tv_dateFolder.setText((CharSequence) folder.getDateFolder());
+        holder.tv_numberFile.setText(String.valueOf(folder.getNumberFile() + " Files"));
 
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
@@ -82,4 +80,5 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public int getItemCount() {
         return folders.size();
     }
+
 }

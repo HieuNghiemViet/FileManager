@@ -39,7 +39,7 @@
         android:id="@+id/number_files"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="3 files"
+        android:text="3 File"
         android:textSize="20sp"
         android:gravity="center"/>
 </androidx.appcompat.widget.LinearLayoutCompat>
