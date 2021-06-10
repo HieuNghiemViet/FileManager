@@ -65,11 +65,8 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         holder.iv_document.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
                     callback.onClick(position);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
+
             }
         });
     }

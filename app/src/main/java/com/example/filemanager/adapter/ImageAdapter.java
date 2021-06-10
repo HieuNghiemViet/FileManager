@@ -17,7 +17,7 @@ import com.example.filemanager.model.Image;
 
 import java.util.ArrayList;
 
-public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>  {
+public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
 
     private ArrayList<Image> images;
     private Context context;
@@ -53,6 +53,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     public void onBindViewHolder(ViewHolder holder, int position) {
         Image image = images.get(position);
         holder.tvImage.setText(image.getTitle());
+        holder.tvImage.setSelected(true);
 
 
         Glide.with(context)
@@ -63,11 +64,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
         holder.ivImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    callback.onClick(position);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
+                callback.onClick(position);
+
             }
         });
 

@@ -447,9 +447,9 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         }
 
         if (hours > 0) {
-            out = hours + ":" + minutes + ":" + seconds;
+            out = hours + " : " + minutes + " : " + seconds;
         } else {
-            out = minutes + ":" + seconds;
+            out = minutes + " : " + seconds;
         }
         return out;
     }

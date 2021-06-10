@@ -1,14 +1,18 @@
 package com.example.filemanager.model;
 
+import java.util.Date;
+
 public class Folder {
     private String nameFolder;
     private String dateFolder;
-    private String numberFile;
+    private int numberFile;
+    private String pathFolder;
 
-    public Folder(String nameFolder) {
+    public Folder(String nameFolder, String dateFolder, int numberFile , String pathFolder) {
         this.nameFolder = nameFolder;
         this.dateFolder = dateFolder;
         this.numberFile = numberFile;
+        this.pathFolder = pathFolder;
     }
 
     public String getNameFolder() {
@@ -27,11 +31,19 @@ public class Folder {
         this.dateFolder = dateFolder;
     }
 
-    public String getNumberFile() {
+    public int getNumberFile() {
         return numberFile;
     }
 
-    public void setNumberFile(String numberFile) {
+    public void setNumberFile(int numberFile) {
         this.numberFile = numberFile;
+    }
+
+    public String getPathFolder() {
+        return pathFolder;
+    }
+
+    public void setPathFolder(String pathFolder) {
+        this.pathFolder = pathFolder;
     }
 }

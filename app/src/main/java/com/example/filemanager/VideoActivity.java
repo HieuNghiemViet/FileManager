@@ -129,7 +129,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     public void onClick(int position) {
         videotmp = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videotmp.getPathVideo()));
-        intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/mp4");
+        intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/*");
         startActivity(intent);
     }
 

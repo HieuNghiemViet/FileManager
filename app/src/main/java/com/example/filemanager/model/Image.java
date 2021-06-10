@@ -4,13 +4,13 @@ package com.example.filemanager.model;
 import java.io.Serializable;
 
 public class Image implements Serializable {
-    String path;
-    String title;
-    long size;
-    long date;
-    int resolution;
-    String displayName;
-    Long id;
+    private String path;
+    private String title;
+    private long size;
+    private long date;
+    private  int resolution;
+    private String displayName;
+    private Long id;
 
     public Image(String path, String title, long size, long date, String displayName, Long id) {
         this.path = path;

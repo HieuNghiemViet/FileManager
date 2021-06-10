@@ -1,32 +1,31 @@
 package com.example.filemanager;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.filemanager.adapter.SongAdapter;
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.function.LongFunction;
+import java.util.Date;
 
-public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
+@RequiresApi(api = Build.VERSION_CODES.O)
+public class StorageActivity extends AppCompatActivity implements OnItemClickListener{
     private RecyclerView rcv_storage;
     private StorageAdapter adapter;
     private ArrayList<Folder> arrayList = new ArrayList<>();
+    Folder folder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +34,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         initView();
         setDataAdapter();
+        //
     }
 
     public void initView() {
@@ -43,26 +43,57 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     public void setDataAdapter() {
         getFolder();
-        adapter = new StorageAdapter(arrayList,this,this);
+        adapter = new StorageAdapter(arrayList, this, this);
         rcv_storage.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         rcv_storage.setLayoutManager(staggeredGridLayoutManager);
     }
 
+
+
+    //fix
     public void getFolder() {
         File extStorageDir = new File(String.valueOf(Environment.getExternalStorageDirectory()));
         String[] fileList = extStorageDir.list();
+
+        String pathDCIM = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
+        String pathDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+        String pathPictures = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
+        String pathMusic = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
+        String pathMovie = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
+ //       String pathDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_).getAbsolutePath();
+
+        File mDCIM = new File(pathDCIM);
+        File[] files = mDCIM.listFiles();
+        String lastModDate = new SimpleDateFormat("dd-MM-yyyy").format(new Date(mDCIM.lastModified()));
+
+        //File mDownload = new File(pathDownload);
+        //File[] file = mDownload.listFiles();
+
+
+
         for (int i = 0; i < fileList.length; i++) {
-            arrayList.add(new Folder(fileList[i].toString()));
+            if(files != null) {
+                arrayList.add(new Folder (fileList[i], lastModDate , files.length,null));
+                Log.d("HieuNV", "size: " + fileList.length);
+                Log.d("HieuNV", "sizeFile: " + files.length);
+                Log.d("HieuNV", "DATE: " + lastModDate);
+            }
         }
     }
 
     @Override
     public void onClick(int position) {
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
-        Log.d("HieuNV", " " +Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() );
-        String m = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        Log.d("HieuNV", " " + m);
+      //  folder = arrayList.get(position);
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+      //  Log.d("HieuNV", "Path: " + path);
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+     //   Log.d("HieuNV", "Size: "+ files.length);
+        for (int i = 0; i < files.length; i++)
+        {
+      //      Log.d("HieuNV", "FileName:" + files[i].getName());
+        }
     }
 
     @Override
