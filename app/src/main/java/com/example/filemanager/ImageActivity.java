@@ -122,7 +122,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             imgUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
 
-        Cursor imgCursor = contentResolver.query(imgUri, null, null, null,MediaStore.Images.Media.DATE_MODIFIED +" DESC");
+        Cursor imgCursor = contentResolver.query(imgUri, null, null, null, MediaStore.Images.Media.DATE_MODIFIED + " DESC");
         if (imgCursor != null && imgCursor.moveToFirst()) {
             int imgTitle = imgCursor.getColumnIndex(MediaStore.Images.Media.TITLE);
             int imgDisplay = imgCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
@@ -155,7 +155,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     @Override
     public void onLongClick(int position) {
         imageTmp = arrayList.get(position);
-
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
 
@@ -314,7 +313,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                 //  arrayList.remove(imageTmp);
+                      arrayList.remove(imageTmp);
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -425,8 +424,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
-
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
