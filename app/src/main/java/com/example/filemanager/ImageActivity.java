@@ -156,7 +156,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     public void onLongClick(int position) {
         imageTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
+        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa" ,"Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override

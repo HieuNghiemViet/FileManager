@@ -3,6 +3,7 @@ package com.example.filemanager.adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,14 +40,12 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tv_nameFolder;
-        private TextView tv_dateFolder;
         private TextView tv_numberFile;
         private ImageView img_folder;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tv_nameFolder = itemView.findViewById(R.id.name_folder);
-            tv_dateFolder = itemView.findViewById(R.id.date_folder);
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
 
@@ -66,15 +65,22 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public void onBindViewHolder(StorageAdapter.ViewHolder holder, int position) {
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy");
-        holder.tv_dateFolder.setText(sdf.format(folder.getDate() * 1000));
-        holder.tv_numberFile.setText(String.valueOf(folder.getNumberFile() + " Files"));
 
+        int items = 0;
+        File[] files = folder.getFile().listFiles();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                if (!files[i].isHidden()) {
+                    items += 1;
+                }
+            }
+        }
+        holder.tv_numberFile.setText(String.valueOf(items) + " Files");
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    callback.onClick(position);
+                callback.onClick(position);
             }
         });
     }
