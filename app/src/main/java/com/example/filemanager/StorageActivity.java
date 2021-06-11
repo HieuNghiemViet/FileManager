@@ -43,7 +43,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         initView();
         setDataAdapter();
-
     }
 
     public void initView() {
@@ -52,6 +51,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
     public void setDataAdapter() {
+        paths.clear();
         getFolder();
         adapter = new StorageAdapter(arrayList, this, this);
         rcv_storage.setAdapter(adapter);
@@ -88,10 +88,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName()));
                 }
                 adapter.notifyDataSetChanged();
-                Log.d("HieuNV", "PATH: " + paths);
             }
         } else {
-            Toast.makeText(this, "Folder Empty", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "File Empty", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -101,20 +100,20 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        ArrayList<File> files = new ArrayList<>();
-
-
-
-
-
-
-//        String previousDir = "storage/emulated/0/MUSIC";
-//        if (previousDir != null) {
-//            Intent activityDir = new Intent(this, StorageActivity.class);
-//         //   activityDir.putExtra("DIR_PATH", previousDir);
-//            startActivity(activityDir);
-//        }
-//        finish();
+        File[] files;
+        if (paths.size() == 1) {
+            super.onBackPressed();
+            return;
+        }
+        File directory = new File(String.valueOf(paths.get(paths.size() - 2)));
+        files = directory.listFiles();
+        paths.remove(paths.size() - 1);
+        arrayList.clear();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName()));
+            }
+            adapter.notifyDataSetChanged();
+        }
     }
 }
