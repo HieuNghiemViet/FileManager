@@ -1,7 +1,6 @@
 package com.example.filemanager.adapter;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +36,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
             super(itemView);
             ivImage = itemView.findViewById(R.id.item_image);
             tvImage = itemView.findViewById(R.id.tv_name_image);
+            tvImage.setSelected(true);
         }
     }
 
@@ -53,12 +53,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     public void onBindViewHolder(ViewHolder holder, int position) {
         Image image = images.get(position);
         holder.tvImage.setText(image.getTitle());
-        holder.tvImage.setSelected(true);
 
 
         Glide.with(context)
                 .load(image.getPath())
-                .placeholder(R.drawable.ic_image)
+                .placeholder(R.drawable.ic_image_2)
                 .into(holder.ivImage);
 
         holder.ivImage.setOnClickListener(new View.OnClickListener() {

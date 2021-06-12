@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -82,8 +83,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                setDataAdapter();
                 swipe.setRefreshing(false);
+                setDataAdapter();
             }
         });
     }
@@ -98,7 +99,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         } else {
             songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         }
-        Cursor songCursor = contentResolver.query(songUri, null, null, null, MediaStore.Audio.Media.DATE_MODIFIED + " DESC");
+        Cursor songCursor = contentResolver.query(songUri, null, null, null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
         if (songCursor != null && songCursor.moveToFirst()) {
             int songName = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
@@ -128,8 +129,9 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     public void onClick(int position) {
         songtmp = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songtmp.getPath()));
-        intent.setDataAndType(Uri.parse(songtmp.getPath()), "audio/mp3");
+        intent.setDataAndType(Uri.parse(songtmp.getPath()), "audio/*");
         startActivity(intent);
+
     }
 
     @Override

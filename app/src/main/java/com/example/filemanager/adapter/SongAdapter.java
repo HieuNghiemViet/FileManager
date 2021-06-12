@@ -41,6 +41,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
             ivSong = itemView.findViewById(R.id.iv_img_song);
             tvArtist = itemView.findViewById(R.id.tv_artist_song);
             tvName = itemView.findViewById(R.id.tv_name_song);
+            tvName.setSelected(true);
         }
     }
 
@@ -62,6 +63,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
 
         Glide.with(context)
                 .load(getAlbumArtURI(song.getImageSong()))
+                .placeholder(R.drawable.ic_music)
                 .into(holder.ivSong);
 
         holder.ivSong.setOnClickListener(new View.OnClickListener() {

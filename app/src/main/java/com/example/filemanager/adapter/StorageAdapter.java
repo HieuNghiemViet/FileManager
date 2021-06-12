@@ -1,30 +1,20 @@
 package com.example.filemanager.adapter;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.filemanager.R;
-import com.example.filemanager.StorageActivity;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHolder> {
 
@@ -56,8 +46,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public StorageAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-        View songView = inflater.inflate(R.layout.item_storage, parent, false);
-        StorageAdapter.ViewHolder viewHolder = new StorageAdapter.ViewHolder(songView);
+        View StorageView = inflater.inflate(R.layout.item_storage, parent, false);
+        StorageAdapter.ViewHolder viewHolder = new StorageAdapter.ViewHolder(StorageView);
         return viewHolder;
     }
 
@@ -65,6 +55,29 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public void onBindViewHolder(StorageAdapter.ViewHolder holder, int position) {
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
+
+//        if (folder.getNameFolder().toLowerCase().endsWith(".jpeg")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".jpg")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".png")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_music);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp4")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_video_2);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".wav")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_music);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".pdf")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_pdf);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".docx")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_docx_file_format_symbol);
+//        } else if (folder.getNameFolder().toLowerCase().endsWith(".txt")) {
+//            holder.img_folder.setImageResource(R.drawable.ic_txt_file_symbol);
+//        }
+
+        holder.img_folder.setImageResource(R.drawable.ic_folder);
+
 
         int items = 0;
         File[] files = folder.getFile().listFiles();
@@ -75,7 +88,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                 }
             }
         }
-        holder.tv_numberFile.setText(String.valueOf(items) + " Files");
+        holder.tv_numberFile.setText(items + " Files");
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override

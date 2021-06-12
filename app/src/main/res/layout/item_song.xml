@@ -32,7 +32,13 @@
                 android:layout_marginStart="10dp"
                 android:gravity="center_vertical"
                 android:text="ilighning"
-                android:textSize="25dp" />
+                android:textSize="25dp"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+
+                android:focusableInTouchMode="true"
+                android:ellipsize="marquee"/>
 
             <TextView
                 android:id="@+id/tv_artist_song"

@@ -35,6 +35,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -69,7 +70,9 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
+
     private Image imageTmp;
+
     private SwipeRefreshLayout swipe;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -78,20 +81,18 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         setContentView(R.layout.activity_image);
 
         initView();
-        try {
-            setDataAdapter();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        setDataAdapter();
+
     }
 
     private void initView() {
         recyclerView = (RecyclerView) findViewById(R.id.rcv_image);
         swipe = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutImage);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setDataAdapter() throws ParseException {
+    private void setDataAdapter() {
         adapter = new ImageAdapter(arrayList, this, this);
         getImage();
         recyclerView.setAdapter(adapter);
@@ -101,14 +102,12 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                try {
-                    setDataAdapter();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
                 swipe.setRefreshing(false);
+                setDataAdapter();
             }
         });
+
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -156,7 +155,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     public void onLongClick(int position) {
         imageTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa" ,"Chia Sẻ"};
+        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
@@ -313,7 +312,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                      arrayList.remove(imageTmp);
+                    arrayList.remove(imageTmp);
 
                     adapter.notifyDataSetChanged();
                 }
