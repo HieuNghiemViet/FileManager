@@ -115,13 +115,24 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             });
             arrayList.clear();
+
+
+
             if (files != null) {
                 Arrays.sort(files, new FileComparator());
                 for (int i = 0; i < files.length; i++) {
                     arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
                 }
                 adapter.notifyDataSetChanged();
+
+//                if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3")) {
+//                    folderTmp = arrayList.get(position);
+//                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+//                    intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
+//                    startActivity(intent);
+//            }
             }
+//
         } else {
             Toast.makeText(StorageActivity.this, "Empty folder", Toast.LENGTH_LONG).show();
         }

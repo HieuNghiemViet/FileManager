@@ -71,7 +71,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             Glide.with(context).load(folder.getPathFolder())
                     .placeholder(R.drawable.ic_image_2)
                     .into(holder.img_folder);
-        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3")) {
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3") || folder.getNameFolder().toLowerCase().endsWith(".wav")) {
             Glide.with(context).load(getAlbumImage(folder.getPathFolder()))
                     .placeholder(R.drawable.ic_music)
                     .into(holder.img_folder);
@@ -79,12 +79,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             Glide.with(context).load(folder.getPathFolder())
                     .placeholder(R.drawable.ic_video_2)
                     .into(holder.img_folder);
-
-        } else if (folder.getNameFolder().toLowerCase().endsWith(".wav")) {
-            Glide.with(context).load(getAlbumImage(folder.getPathFolder()))
-                    .placeholder(R.drawable.ic_music)
-                    .into(holder.img_folder);
-
         } else if (folder.getNameFolder().toLowerCase().endsWith(".pdf")) {
             holder.img_folder.setImageResource(R.drawable.ic_pdf);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".docx")) {
