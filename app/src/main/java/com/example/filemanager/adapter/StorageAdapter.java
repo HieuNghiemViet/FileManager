@@ -1,6 +1,11 @@
 package com.example.filemanager.adapter;
 
+import android.content.ContentUris;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +15,11 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.filemanager.R;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
+import com.example.filemanager.model.Song;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -57,27 +64,40 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
 
-        if (folder.getNameFolder().toLowerCase().endsWith(".jpeg")) {
-            holder.img_folder.setImageResource(R.drawable.ic_image_2);
-        } else if (folder.getNameFolder().toLowerCase().endsWith(".jpg")) {
-            holder.img_folder.setImageResource(R.drawable.ic_image_2);
-        } else if (folder.getNameFolder().toLowerCase().endsWith(".png")) {
-            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+
+        if (folder.getNameFolder().toLowerCase().endsWith(".jpeg") ||
+                folder.getNameFolder().toLowerCase().endsWith(".jpg") ||
+                folder.getNameFolder().toLowerCase().endsWith(".png")) {
+            Glide.with(context).load(folder.getPathFolder())
+                    .placeholder(R.drawable.ic_image_2)
+                    .into(holder.img_folder);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3")) {
-            holder.img_folder.setImageResource(R.drawable.ic_music);
+            Glide.with(context).load(getAlbumImage(folder.getPathFolder()))
+                    .placeholder(R.drawable.ic_music)
+                    .into(holder.img_folder);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".mp4")) {
-            holder.img_folder.setImageResource(R.drawable.ic_video_2);
+            Glide.with(context).load(folder.getPathFolder())
+                    .placeholder(R.drawable.ic_video_2)
+                    .into(holder.img_folder);
+
         } else if (folder.getNameFolder().toLowerCase().endsWith(".wav")) {
-            holder.img_folder.setImageResource(R.drawable.ic_music);
+            Glide.with(context).load(getAlbumImage(folder.getPathFolder()))
+                    .placeholder(R.drawable.ic_music)
+                    .into(holder.img_folder);
+
         } else if (folder.getNameFolder().toLowerCase().endsWith(".pdf")) {
             holder.img_folder.setImageResource(R.drawable.ic_pdf);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".docx")) {
             holder.img_folder.setImageResource(R.drawable.ic_docx_file_format_symbol);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".txt")) {
             holder.img_folder.setImageResource(R.drawable.ic_txt_file_symbol);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".zip")) {
+            holder.img_folder.setImageResource(R.drawable.ic_zip);
         } else {
             holder.img_folder.setImageResource(R.drawable.ic_folder);
         }
+
+        Log.d("HieuNV", "folder.getNameFolder(): " + folder.getNameFolder());
 
         int items = 0;
         File[] files = folder.getFile().listFiles();
@@ -109,6 +129,14 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     @Override
     public int getItemCount() {
         return folders.size();
+    }
+
+    private Bitmap getAlbumImage(String path) {
+        android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(path);
+        byte[] data = mmr.getEmbeddedPicture();
+        if (data != null) return BitmapFactory.decodeByteArray(data, 0, data.length);
+        return null;
     }
 
 }

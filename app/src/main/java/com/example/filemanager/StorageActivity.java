@@ -40,6 +40,13 @@ import com.example.filemanager.model.Folder;
 import com.example.filemanager.model.Image;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,13 +54,12 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
-    private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
     private StorageAdapter adapter;
     ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
-
+    private File fileTmp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,14 +85,19 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     public void getFolder() {
         String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        Log.d("HieuNV", " path: " + path);
         File directory = new File(path);
         listPaths.add(path);
-        File[] files = directory.listFiles();
-        Arrays.sort(files, new FileComparator());
+        File[] files = directory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return !pathname.isHidden();
+            }
+        });
+
         if (files != null) {
+            Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName()));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
             }
         }
     }
@@ -97,28 +108,23 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             String path = arrayList.get(position).getFile().getAbsolutePath();
             listPaths.add(path);
             File directory = new File(path);
-            File[] files = directory.listFiles();
-            arrayList.clear();
-            Arrays.sort(files, new FileComparator());
-
-
-            if (files != null) {
-                for (int i = 0; i < files.length; i++) {
-                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName()));
+            File[] files = directory.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return !pathname.isHidden();
                 }
-
+            });
+            arrayList.clear();
+            if (files != null) {
+                Arrays.sort(files, new FileComparator());
+                for (int i = 0; i < files.length; i++) {
+                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
+                }
                 adapter.notifyDataSetChanged();
-//                if (arrayList.get(position).getFile().getAbsolutePath().toLowerCase().endsWith(".mp3")) {
-//                    Intent intent = new Intent();
-//                    intent.setAction(android.content.Intent.ACTION_VIEW);w
-//                    intent.setDataAndType(Uri.parse(arrayList.get(position).getFile().getAbsolutePath()), "audio/*");
-//                    startActivity(intent);
-//                }
-            } else {
-                Toast.makeText(this, "File Empty", Toast.LENGTH_LONG).show();
             }
+        } else {
+            Toast.makeText(StorageActivity.this, "Empty folder", Toast.LENGTH_LONG).show();
         }
-
     }
 
     @Override
@@ -132,7 +138,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                        copyFolder(Gravity.CENTER, folderTmp);
+                   //     copyFolder(fileTmp, "/storage/emulated/0/Music");
                         break;
                     case 1:
                         cutFolder();
@@ -153,6 +159,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
     private void showHiddenFiles() {
+
     }
 
     private void deleteDialog(Folder folderTmp) {
@@ -165,7 +172,18 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private void cutFolder() {
     }
 
-    private void copyFolder(int center, Folder folderTmp) {
+    private void copyFolder(File src, File dst) throws IOException {
+        try (InputStream in = new FileInputStream(src)) {
+            try (OutputStream out = new FileOutputStream(dst)) {
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -176,13 +194,18 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             return;
         }
         File directory = new File(listPaths.get(listPaths.size() - 2));
-        files = directory.listFiles(); // get all file children
+        files = directory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return !pathname.isHidden();
+            }
+        });
         listPaths.remove(listPaths.size() - 1);
         arrayList.clear();
-        Arrays.sort(files, new FileComparator());
         if (files != null) {
+            Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName()));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
             }
             adapter.notifyDataSetChanged();
         }

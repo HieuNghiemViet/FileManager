@@ -12,11 +12,13 @@ public class Folder {
     private File file;
     private String nameFolder;
     private Context context;
+    private String pathFolder;
 
-    public Folder(Context context, File file, String nameFolder) {
+    public Folder(Context context, File file, String nameFolder, String pathFolder) {
         this.file = file;
         this.nameFolder = nameFolder;
         this.context = context;
+        this.pathFolder = pathFolder;
     }
 
     public File getFile() {
@@ -43,4 +45,11 @@ public class Folder {
         this.context = context;
     }
 
+    public String getPathFolder() {
+        return pathFolder;
+    }
+
+    public void setPathFolder(String pathFolder) {
+        this.pathFolder = pathFolder;
+    }
 }
