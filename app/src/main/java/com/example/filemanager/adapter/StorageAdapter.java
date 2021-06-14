@@ -1,6 +1,7 @@
 package com.example.filemanager.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import com.example.filemanager.model.Folder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHolder> {
 
@@ -38,7 +40,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             tv_nameFolder = itemView.findViewById(R.id.name_folder);
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
-
         }
     }
 
@@ -56,28 +57,27 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
 
-//        if (folder.getNameFolder().toLowerCase().endsWith(".jpeg")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".jpg")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".png")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_image_2);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_music);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp4")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_video_2);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".wav")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_music);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".pdf")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_pdf);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".docx")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_docx_file_format_symbol);
-//        } else if (folder.getNameFolder().toLowerCase().endsWith(".txt")) {
-//            holder.img_folder.setImageResource(R.drawable.ic_txt_file_symbol);
-//        }
-
-        holder.img_folder.setImageResource(R.drawable.ic_folder);
-
+        if (folder.getNameFolder().toLowerCase().endsWith(".jpeg")) {
+            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".jpg")) {
+            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".png")) {
+            holder.img_folder.setImageResource(R.drawable.ic_image_2);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3")) {
+            holder.img_folder.setImageResource(R.drawable.ic_music);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".mp4")) {
+            holder.img_folder.setImageResource(R.drawable.ic_video_2);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".wav")) {
+            holder.img_folder.setImageResource(R.drawable.ic_music);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".pdf")) {
+            holder.img_folder.setImageResource(R.drawable.ic_pdf);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".docx")) {
+            holder.img_folder.setImageResource(R.drawable.ic_docx_file_format_symbol);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".txt")) {
+            holder.img_folder.setImageResource(R.drawable.ic_txt_file_symbol);
+        } else {
+            holder.img_folder.setImageResource(R.drawable.ic_folder);
+        }
 
         int items = 0;
         File[] files = folder.getFile().listFiles();
@@ -94,6 +94,14 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 callback.onClick(position);
+            }
+        });
+
+        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                callback.onLongClick(position);
+                return false;
             }
         });
     }
