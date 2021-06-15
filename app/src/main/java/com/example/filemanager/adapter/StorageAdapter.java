@@ -91,8 +91,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             holder.img_folder.setImageResource(R.drawable.ic_folder);
         }
 
-        Log.d("HieuNV", "folder.getNameFolder(): " + folder.getNameFolder());
-
         int items = 0;
         File[] files = folder.getFile().listFiles();
         if (files != null) {

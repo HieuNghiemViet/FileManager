@@ -6,9 +6,10 @@ import android.net.Uri;
 import android.provider.MediaStore;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Date;
 
-public class Folder {
+public class Folder implements Serializable {
     private File file;
     private String nameFolder;
     private Context context;

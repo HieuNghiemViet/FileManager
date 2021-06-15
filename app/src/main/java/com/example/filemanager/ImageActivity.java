@@ -266,7 +266,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
 
     public Long getIdFromDisplayName(String displayName) {
         String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID}; // fix
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
         Cursor cursor = getContentResolver().query(extUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
 
