@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -29,6 +31,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.filemanager.FileComparator;
+import com.example.filemanager.R;
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
@@ -47,6 +51,7 @@ import java.util.Arrays;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
     private static final int RENAME_REQUEST_CODE = 1000;
+    private static final int CREATE_REQUEST_CODE = 100;
     private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -70,13 +75,50 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         initView();
         setDataAdapter();
-    }
 
+    }
 
     public void initView() {
         rcv_storage = (RecyclerView) findViewById(R.id.rcv_storage);
         btn_add = (FloatingActionButton) findViewById(R.id.fabAdd);
         btn_paste = (Button) findViewById(R.id.btn_paste);
+        btn_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(StorageActivity.this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.layout_dialog_add_folder);
+
+                tv_addFolder_cancel = dialog.findViewById(R.id.tv_addFolder_huy);
+                tv_addFolder_ok = dialog.findViewById(R.id.tv_addFolder_ok);
+                edt_addFolder = dialog.findViewById(R.id.edt_addFolder);
+
+                Window window = dialog.getWindow();
+                if (window == null) {
+                    return;
+                }
+                window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+                window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+                WindowManager.LayoutParams windowAttributes = window.getAttributes();
+                window.setAttributes(windowAttributes);
+                dialog.show();
+
+                tv_addFolder_ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        createFolder();
+                        dialog.dismiss();
+                    }
+                });
+                tv_addFolder_cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
     }
 
     public void setDataAdapter() {
@@ -102,10 +144,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
                 arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
-                createFolder(path);
             }
         }
     }
+
 
     @Override
     public void onClick(int position) {
@@ -147,9 +189,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     Arrays.sort(files, new FileComparator());
                     for (int i = 0; i < files.length; i++) {
                         arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
-                        createFolder(path);
+                        adapter.notifyDataSetChanged();
                     }
-                    adapter.notifyDataSetChanged();
                 }
             }
         } else {
@@ -168,7 +209,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                       // copyFolder(folderTmp.getPathFolder(), );
+                        // copyFolder(folderTmp.getPathFolder(), );
                         btn_paste.setVisibility(View.VISIBLE);
                         break;
                     case 1:
@@ -231,8 +272,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 File oldFolder = new File(folderTmp.getPathFolder());
                 File newFolder = new File(folderTmp.getPathFolder(), edt_rename.toString());
                 if (oldFolder.exists()) {
-                     oldFolder.renameTo(newFolder);
-                     Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                    oldFolder.renameTo(newFolder);
+                    Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
                 }
                 dialog.dismiss();
             }
@@ -290,51 +331,33 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    private void createFolder(String path) {
-        btn_add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Dialog dialog = new Dialog(StorageActivity.this);
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                dialog.setContentView(R.layout.layout_dialog_add_folder);
+    private void createFolder() {
+        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            folderName = edt_addFolder.getText().toString().trim();
 
-                tv_addFolder_cancel = dialog.findViewById(R.id.tv_addFolder_huy);
-                tv_addFolder_ok = dialog.findViewById(R.id.tv_addFolder_ok);
-                edt_addFolder = dialog.findViewById(R.id.edt_addFolder);
-
-                Window window = dialog.getWindow();
-                if (window == null) {
-                    return;
+            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+            if (!file.exists()) {
+                if (file.mkdir()) {
+                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
+                    arrayList.add(new Folder(this, file, file.getName(), file.getPath()));
                 }
-                window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-                window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
 
-                WindowManager.LayoutParams windowAttributes = window.getAttributes();
-                window.setAttributes(windowAttributes);
-                dialog.show();
-
-                tv_addFolder_ok.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        folderName = edt_addFolder.getText().toString().trim();
-                        File file = new File(path, folderName);
-                        if (!file.exists()) {
-                            file.mkdir();
-                            if (file.isDirectory()) {
-                                Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                        //adapter.notifyDataSetChanged(); // fix adapter when create folder
-                        dialog.dismiss();
-                    }
-                });
-                tv_addFolder_cancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                    }
-                });
             }
-        });
+            adapter.notifyDataSetChanged(); // fix adapter when create folder
+        } else {
+            ActivityCompat.requestPermissions(StorageActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    CREATE_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == CREATE_REQUEST_CODE && (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+            createFolder();
+
+        }
     }
 }
