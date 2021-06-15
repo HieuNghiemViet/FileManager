@@ -32,6 +32,7 @@ import android.widget.Toast;
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
+import com.example.filemanager.model.Image;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -61,7 +62,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +103,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             for (int i = 0; i < files.length; i++) {
                 arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
                 createFolder(path);
-                Log.d("HieuNV", "files[i].getAbsolutePath(): " + files[i].getAbsolutePath());
             }
         }
     }
@@ -169,8 +168,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-//                        copyFolder(folderTmp.getPathFolder(), );
-//                        btn_paste.setVisibility(View.VISIBLE);
+                       // copyFolder(folderTmp.getPathFolder(), );
+                        btn_paste.setVisibility(View.VISIBLE);
                         break;
                     case 1:
                         cutFolder();
@@ -191,7 +190,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
     private void showHiddenFiles() {
-
     }
 
     private void deleteFolder() {
@@ -199,6 +197,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (fDelete.exists()) {
             if (fDelete.delete()) {
                 Toast.makeText(StorageActivity.this, "Folder Delete", Toast.LENGTH_LONG).show();
+                getFolder();
             } else {
                 Toast.makeText(StorageActivity.this, "Folder Not Delete", Toast.LENGTH_LONG).show();
             }
@@ -227,14 +226,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         dialog.show();
 
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                File oldFolder = new File(Environment.getExternalStorageDirectory(), folderTmp.getNameFolder());
-                File newFolder = new File(Environment.getExternalStorageDirectory(), edt_rename.toString());
-                Log.d("HieuNV", "edtname: " + edt_rename.toString());
+                File oldFolder = new File(folderTmp.getPathFolder());
+                File newFolder = new File(folderTmp.getPathFolder(), edt_rename.toString());
                 if (oldFolder.exists()) {
-                    oldFolder.renameTo(newFolder);
+                     oldFolder.renameTo(newFolder);
+                     Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
                 }
                 dialog.dismiss();
             }
@@ -316,7 +314,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 dialog.show();
 
                 tv_addFolder_ok.setOnClickListener(new View.OnClickListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onClick(View v) {
                         folderName = edt_addFolder.getText().toString().trim();
