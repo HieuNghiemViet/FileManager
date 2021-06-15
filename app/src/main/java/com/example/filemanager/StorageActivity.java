@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,6 +24,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +57,11 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private EditText edt_addFolder;
     private FloatingActionButton btn_add;
     private String folderName;
+    private Button btn_paste;
+    private TextView tv_rename_cancel;
+    private TextView tv_rename_ok;
+    private EditText edt_rename;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +73,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
 
-
     public void initView() {
         rcv_storage = (RecyclerView) findViewById(R.id.rcv_storage);
         btn_add = (FloatingActionButton) findViewById(R.id.fabAdd);
+        btn_paste = (Button) findViewById(R.id.btn_paste);
     }
 
     public void setDataAdapter() {
@@ -80,8 +87,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         rcv_storage.setLayoutManager(staggeredGridLayoutManager);
     }
-
-    ;
 
     public void getFolder() {
         String path = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -98,7 +103,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             for (int i = 0; i < files.length; i++) {
                 arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
                 createFolder(path);
-                Log.d("HieuNV", "files[i].getAbsolutePath(): " +  files[i].getAbsolutePath());
+                Log.d("HieuNV", "files[i].getAbsolutePath(): " + files[i].getAbsolutePath());
             }
         }
     }
@@ -135,7 +140,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 //            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".jpeg") ||
 //                    folderTmp.getNameFolder().toLowerCase().endsWith(".jpg") ||
 //                    folderTmp.getNameFolder().toLowerCase().endsWith(".png")) {
-//            }
+//            } // /////
 
             arrayList.clear();
             if (files != null) {
@@ -164,16 +169,17 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                     //        copyFolder();
+//                        copyFolder(folderTmp.getPathFolder(), );
+//                        btn_paste.setVisibility(View.VISIBLE);
                         break;
                     case 1:
                         cutFolder();
                         break;
                     case 2:
-                        //         renameFolder(Gravity.CENTER, folderTmp);
+                        renameFolder();
                         break;
                     case 3:
-                        deleteFolder(folderTmp);
+                        deleteFolder();
                         break;
                     case 4:
                         showHiddenFiles();
@@ -188,111 +194,61 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     }
 
-    private void deleteFolder(Folder folderTmp) {
+    private void deleteFolder() {
+        File fDelete = new File(folderTmp.getPathFolder());
+        if (fDelete.exists()) {
+            if (fDelete.delete()) {
+                Toast.makeText(StorageActivity.this, "Folder Delete", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(StorageActivity.this, "Folder Not Delete", Toast.LENGTH_LONG).show();
+            }
+        }
+        adapter.notifyDataSetChanged();
     }
 
-//    private void renameFolder(int gravity, Folder folderTmp) {
-//        final Dialog dialog = new Dialog(this);
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        dialog.setContentView(R.layout.layout_dialog_rename);
-//
-//        tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
-//        tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);
-//        edt_rename = dialog.findViewById(R.id.edt_rename);
-//        edt_rename.setText(folderTmp.getNameFolder());
-//
-//        Window window = dialog.getWindow();
-//        if (window == null) {
-//            return;
-//        }
-//        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-//        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-//
-//        WindowManager.LayoutParams windowAttributes = window.getAttributes();
-//        windowAttributes.gravity = gravity;
-//        window.setAttributes(windowAttributes);
-//        dialog.show();
-//
-//        tv_rename_ok.setOnClickListener(new View.OnClickListener() {
-//            @RequiresApi(api = Build.VERSION_CODES.O)
-//            @Override
-//            public void onClick(View v) {
-//                try {
-//                    renameFileUsingDisplayName(StorageActivity.this, folderTmp.getPathFolder());
-//                    Log.d("HieuNV", "folderTmp.getPathFolder(): " +folderTmp.getPathFolder());
-//                } catch (IntentSender.SendIntentException e) {
-//                    e.printStackTrace();
-//                }
-//                dialog.dismiss();
-//            }
-//        });
-//
-//        tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                dialog.dismiss();
-//            }
-//        });
-//    }
-//
-//    @RequiresApi(api = Build.VERSION_CODES.O)
-//    public boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
-//        try {
-//            Long id = getIdFromDisplayName(displayName);
-//            ContentResolver resolver = context.getContentResolver();
-//            Uri mUri = ContentUris.withAppendedId(extUri, id);
-//            ContentValues contentValues = new ContentValues();
-//            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
-//            contentValues.clear();
-//
-//            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
-//            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
-//            contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
-//            resolver.update(mUri, contentValues, null, null);
-//            folderTmp.setNameFolder(edt_rename.getText().toString());
-//            adapter.notifyDataSetChanged();
-//            getFolder();
-//            return true;
-//        } catch (SecurityException securityException) {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//                RecoverableSecurityException recoverableSecurityException;
-//                if (securityException instanceof RecoverableSecurityException) {
-//                    recoverableSecurityException =
-//                            (RecoverableSecurityException) securityException;
-//                } else {
-//                    throw new RuntimeException(
-//                            securityException.getMessage(), securityException);
-//                }
-//                IntentSender intentSender = recoverableSecurityException.getUserAction()
-//                        .getActionIntent().getIntentSender();
-//                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
-//                        null, 0, 0, 0, null);
-//            } else {
-//                throw new RuntimeException(
-//                        securityException.getMessage(), securityException);
-//            }
-//        }
-//        return false;
-//    }
-//
-//    public Long getIdFromDisplayName(String displayName) {
-//        String[] projection;
-//        projection = new String[]{MediaStore.Files.FileColumns._ID};
-//        Cursor cursor = getContentResolver().query(extUri, projection,
-//                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-//
-//        assert cursor != null;
-//        cursor.moveToFirst();
-//
-//        if (cursor.getCount() > 0) {
-//            int columnIndex = cursor.getColumnIndex(projection[0]);
-//            long fileId = cursor.getLong(columnIndex);
-//
-//            cursor.close();
-//            return fileId;
-//        }
-//        return null;
-//    }
+    private void renameFolder() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.layout_dialog_rename);
+
+        tv_rename_cancel = dialog.findViewById(R.id.tv_rename_huy);
+        tv_rename_ok = dialog.findViewById(R.id.tv_rename_ok);
+        edt_rename = dialog.findViewById(R.id.edt_rename);
+        edt_rename.setText(folderTmp.getNameFolder());
+
+        Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+        WindowManager.LayoutParams windowAttributes = window.getAttributes();
+        window.setAttributes(windowAttributes);
+        dialog.show();
+
+        tv_rename_ok.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onClick(View v) {
+                File oldFolder = new File(Environment.getExternalStorageDirectory(), folderTmp.getNameFolder());
+                File newFolder = new File(Environment.getExternalStorageDirectory(), edt_rename.toString());
+                Log.d("HieuNV", "edtname: " + edt_rename.toString());
+                if (oldFolder.exists()) {
+                    oldFolder.renameTo(newFolder);
+                }
+                dialog.dismiss();
+            }
+        });
+
+        tv_rename_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+
+    }
 
     private void cutFolder() {
     }
