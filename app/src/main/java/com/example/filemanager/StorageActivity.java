@@ -1,6 +1,7 @@
 package com.example.filemanager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,18 +10,24 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
+import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -52,6 +59,7 @@ import java.util.Arrays;
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
     private static final int RENAME_REQUEST_CODE = 1000;
     private static final int CREATE_REQUEST_CODE = 100;
+    private static final int DELETE_REQUEST_CODE = 10;
     private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -67,6 +75,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
+    private TextView emptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,13 +84,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         initView();
         setDataAdapter();
-
     }
 
     public void initView() {
         rcv_storage = (RecyclerView) findViewById(R.id.rcv_storage);
         btn_add = (FloatingActionButton) findViewById(R.id.fabAdd);
         btn_paste = (Button) findViewById(R.id.btn_paste);
+        emptyView = (TextView) findViewById(R.id.empty_view);
         btn_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -128,6 +137,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         rcv_storage.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         rcv_storage.setLayoutManager(staggeredGridLayoutManager);
+
+//            emptyView.setVisibility(View.GONE);
+//            rcv_storage.setVisibility(View.VISIBLE);
+
     }
 
     public void getFolder() {
@@ -148,7 +161,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-
     @Override
     public void onClick(int position) {
         if (arrayList.size() > 0) {
@@ -162,26 +174,29 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             });
             folderTmp = arrayList.get(position);
-//            if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3") || folderTmp.getNameFolder().toLowerCase().endsWith(".wav")) {
-//                Log.d("HieuNV", "folderTmp.getNameFolder().toLower: " + folderTmp.getNameFolder().toLowerCase().endsWith(".mp3"));
-//                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
-//                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
-//                startActivity(intent);
+            if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3") || folderTmp.getNameFolder().toLowerCase().endsWith(".wav")) {
+                Log.d("HieuNV", "folderTmp.getNameFolder().toLower: " + folderTmp.getNameFolder().toLowerCase().endsWith(".mp3"));
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
+                startActivity(intent);
 
-//                Intent in = new Intent();
-//                in.setAction(android.content.Intent.ACTION_VIEW);
-//                File file = new File(folderTmp.getPathFolder());
-//                in.setDataAndType(Uri.fromFile(file), "audio/*");
-//                startActivity(in);
-//
-//            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp4")) {
-//                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
-//                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "video/*");
-//                startActivity(intent);
-//            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".jpeg") ||
-//                    folderTmp.getNameFolder().toLowerCase().endsWith(".jpg") ||
-//                    folderTmp.getNameFolder().toLowerCase().endsWith(".png")) {
-//            } // /////
+                Intent in = new Intent();
+                in.setAction(android.content.Intent.ACTION_VIEW);
+                File file = new File(folderTmp.getPathFolder());
+                in.setDataAndType(Uri.fromFile(file), "audio/*");
+                startActivity(in);
+
+            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp4")) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "video/*");
+                startActivity(intent);
+            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".jpeg") ||
+                    folderTmp.getNameFolder().toLowerCase().endsWith(".jpg") ||
+                    folderTmp.getNameFolder().toLowerCase().endsWith(".png")) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "image/*");
+                startActivity(intent);
+            }
 
             arrayList.clear();
             if (files != null) {
@@ -202,18 +217,42 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void onLongClick(int position) {
         folderTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Copy", "Move", "Rename", "Delete", "Show hidden files"};
+        final String[] feature = {"Copy", "Move", "Rename", "Delete"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                        // copyFolder(folderTmp.getPathFolder(), );
                         btn_paste.setVisibility(View.VISIBLE);
+                        btn_paste.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                try {
+                                    copyFolder(folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    Log.d("HieuNV", "e1: " + e.toString());
+                                }
+                                btn_paste.setVisibility(View.INVISIBLE);
+                                Toast.makeText(StorageActivity.this, "Successfully", Toast.LENGTH_LONG).show();
+                            }
+                        });
                         break;
                     case 1:
-                        cutFolder();
+                        btn_paste.setVisibility(View.VISIBLE);
+                        btn_paste.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                try {
+                                    cutFolder(folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    Log.d("HieuNV", "e: " + e.toString());
+                                }
+                                btn_paste.setVisibility(View.INVISIBLE);
+                            }
+                        });
                         break;
                     case 2:
                         renameFolder();
@@ -221,16 +260,75 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     case 3:
                         deleteFolder();
                         break;
-                    case 4:
-                        showHiddenFiles();
-                        break;
                 }
             }
         });
         myBuilder.create().show();
     }
 
-    private void showHiddenFiles() {
+    private void copyFolder(String src, String dst) throws IOException {
+        String[] listPathInput = src.split("/");
+        File outPut = new File(dst + "/" + listPathInput[listPathInput.length - 1]);
+        if (!outPut.exists()) {
+            outPut.createNewFile();
+        }
+        try (InputStream in = new FileInputStream(src)) {
+            try (OutputStream out = new FileOutputStream(dst)) {
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("HieuNV", "e2: " + e.toString());
+            }
+        }
+
+    }
+
+    private void cutFolder(String src, String dst) throws IOException {
+//        String[] listPathInput = src.split("/");
+//        File outPut = new File(dst + "/" + listPathInput[listPathInput.length - 1]);
+//        if (!outPut.exists()) {
+//            outPut.createNewFile();
+//        }
+//        try (InputStream in = new FileInputStream(src)) {
+//            try (OutputStream out = new FileOutputStream(dst)) {
+//                byte[] buf = new byte[1024];
+//                int len;
+//                while ((len = in.read(buf)) > 0) {
+//                    out.write(buf, 0, len);
+//                }
+//
+//                outPut.delete();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                Log.d("HieuNV", "e2: " + e.toString());
+//            }
+//        }
+
+
+    }
+
+    private void createFolder() {
+        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            folderName = edt_addFolder.getText().toString().trim();
+
+            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+            if (!file.exists()) {
+                if (file.mkdir()) {
+                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
+                    arrayList.add(new Folder(StorageActivity.this, file, file.getName(), file.getPath()));
+                }
+            }
+            adapter.notifyDataSetChanged();
+        } else {
+            ActivityCompat.requestPermissions(StorageActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    CREATE_REQUEST_CODE);
+        }
     }
 
     private void deleteFolder() {
@@ -243,7 +341,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 Toast.makeText(StorageActivity.this, "Folder Not Delete", Toast.LENGTH_LONG).show();
             }
         }
-        adapter.notifyDataSetChanged();
     }
 
     private void renameFolder() {
@@ -269,13 +366,23 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File oldFolder = new File(folderTmp.getPathFolder());
-                File newFolder = new File(folderTmp.getPathFolder(), edt_rename.toString());
-                if (oldFolder.exists()) {
-                    oldFolder.renameTo(newFolder);
-                    Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    File oldFolder = new File(listPaths.get(listPaths.size() - 1), folderTmp.getNameFolder());
+                    File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
+                    if (oldFolder.exists()) {
+                        if (oldFolder.renameTo(newFolder)) {
+                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    dialog.dismiss();
+                } else {
+                    ActivityCompat.requestPermissions(StorageActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            RENAME_REQUEST_CODE);
                 }
-                dialog.dismiss();
             }
         });
 
@@ -285,26 +392,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 dialog.dismiss();
             }
         });
-
-
     }
 
-    private void cutFolder() {
-    }
-
-    private void copyFolder(File src, File dst) throws IOException {
-        try (InputStream in = new FileInputStream(src)) {
-            try (OutputStream out = new FileOutputStream(dst)) {
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     @Override
     public void onBackPressed() {
@@ -331,33 +420,26 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    private void createFolder() {
-        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            folderName = edt_addFolder.getText().toString().trim();
-
-            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
-            if (!file.exists()) {
-                if (file.mkdir()) {
-                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
-                    arrayList.add(new Folder(this, file, file.getName(), file.getPath()));
-                }
-
-            }
-            adapter.notifyDataSetChanged(); // fix adapter when create folder
-        } else {
-            ActivityCompat.requestPermissions(StorageActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    CREATE_REQUEST_CODE);
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CREATE_REQUEST_CODE && (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
             createFolder();
-
         }
     }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == DELETE_REQUEST_CODE) {
+//            if (resultCode == Activity.RESULT_OK) {
+//                try {
+//                    deleteFileUsingDisplayName(StorageActivity.this, folderTmp.getPathFolder());
+//                    adapter.notifyDataSetChanged();
+//                } catch (IntentSender.SendIntentException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 }

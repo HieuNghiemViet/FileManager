@@ -106,8 +106,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                 setDataAdapter();
             }
         });
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -313,7 +311,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
                     arrayList.remove(imageTmp);
-
                     adapter.notifyDataSetChanged();
                 }
                 return true;

@@ -30,6 +30,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private ArrayList<Folder> folders;
     private Context context;
     private OnItemClickListener callback;
+    private static final int VIEW_TYPE_EMPTY = 2;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
