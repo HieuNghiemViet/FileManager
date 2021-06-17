@@ -139,7 +139,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         songtmp = arrayList.get(position);
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
+        final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
@@ -149,16 +149,14 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                         infoSong(Gravity.CENTER, songtmp);
                         break;
                     case 1:
-                        cutSong();
-                        break;
-                    case 2:
                         renameSong(Gravity.CENTER, songtmp);
                         break;
-                    case 3:
+                    case 2:
                         deleteDialog(songtmp);
                         break;
-                    case 4:
+                    case 3:
                         shareSong(songtmp);
+                        break;
                 }
             }
         });

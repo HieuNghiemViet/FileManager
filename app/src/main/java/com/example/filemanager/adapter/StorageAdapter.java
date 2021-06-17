@@ -1,12 +1,9 @@
 package com.example.filemanager.adapter;
 
-import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +16,11 @@ import com.bumptech.glide.Glide;
 import com.example.filemanager.R;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
-import com.example.filemanager.model.Song;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHolder> {
 
@@ -125,11 +122,16 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     }
 
     private Bitmap getAlbumImage(String path) {
-        android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(path);
-        byte[] data = mmr.getEmbeddedPicture();
-        if (data != null) return BitmapFactory.decodeByteArray(data, 0, data.length);
-        return null;
+        MediaMetadataRetriever mdr = new MediaMetadataRetriever();
+        mdr.setDataSource(path);
+        InputStream inputStream = null;
+        if (mdr.getEmbeddedPicture() != null) {
+            inputStream = new ByteArrayInputStream(mdr.getEmbeddedPicture());
+        }
+        mdr.release();
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        return bitmap;
     }
+
 
 }

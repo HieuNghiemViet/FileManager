@@ -138,7 +138,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         videotmp = arrayList.get(position);
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
+        final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
@@ -148,16 +148,14 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                         infoVideo(Gravity.CENTER, videotmp);
                         break;
                     case 1:
-                        cutVideo();
-                        break;
-                    case 2:
                         renameVideo(Gravity.CENTER, videotmp);
                         break;
-                    case 3:
+                    case 2:
                         deleteDialog(videotmp);
                         break;
-                    case 4:
+                    case 3:
                         shareVideo(videotmp);
+                        break;
                 }
             }
         });

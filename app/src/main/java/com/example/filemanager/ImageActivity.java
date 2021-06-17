@@ -153,7 +153,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     public void onLongClick(int position) {
         imageTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Thông tin", "Chép vào", "Đổi tên", "Xóa", "Chia Sẻ"};
+        final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
@@ -163,16 +163,14 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                         infoImage(Gravity.CENTER, imageTmp);
                         break;
                     case 1:
-                        cutImage();
-                        break;
-                    case 2:
                         renameImage(Gravity.CENTER, imageTmp);
                         break;
-                    case 3:
+                    case 2:
                         deleteDialog(imageTmp);
                         break;
-                    case 4:
+                    case 3:
                         shareImage(imageTmp);
+                        break;
                 }
             }
         });
