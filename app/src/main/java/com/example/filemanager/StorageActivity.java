@@ -16,9 +16,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileUtils;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -35,11 +33,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +42,6 @@ import java.util.Arrays;
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
     private static final int RENAME_REQUEST_CODE = 1000;
     private static final int CREATE_REQUEST_CODE = 100;
-    private static final int DELETE_REQUEST_CODE = 10;
     private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -61,6 +55,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private FloatingActionButton btn_add;
     private String folderName;
     private Button btn_paste;
+    private Button btn_cancel;
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
@@ -79,6 +74,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         rcv_storage = (RecyclerView) findViewById(R.id.rcv_storage);
         btn_add = (FloatingActionButton) findViewById(R.id.fabAdd);
         btn_paste = (Button) findViewById(R.id.btn_paste);
+        btn_cancel = (Button) findViewById(R.id.btn_cancel);
         emptyView = (TextView) findViewById(R.id.empty_view);
         btn_add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -126,10 +122,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         rcv_storage.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         rcv_storage.setLayoutManager(staggeredGridLayoutManager);
-
-//            emptyView.setVisibility(View.GONE);
-//            rcv_storage.setVisibility(View.VISIBLE);
-
     }
 
     public void getFolder() {
@@ -150,24 +142,34 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
+    private void createFolder() {
+        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            folderName = edt_addFolder.getText().toString().trim();
+            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+            if (!file.exists()) {
+                if (file.mkdir()) {
+                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
+                    repaintUI(listPaths.get(listPaths.size() - 1));
+                }
+            }
+        } else {
+            ActivityCompat.requestPermissions(StorageActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    CREATE_REQUEST_CODE);
+        }
+    }
+
     @Override
     public void onClick(int position) {
         if (!arrayList.isEmpty()) {
             folderTmp = arrayList.get(position);
             listPaths.add(arrayList.get(position).getFile().getAbsolutePath());
-            repainUI(arrayList.get(position).getFile().getAbsolutePath());
-
+            //fix image when repaintUI
             if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3") || folderTmp.getNameFolder().toLowerCase().endsWith(".wav")) {
-                Log.d("HieuNV", "folderTmp.getNameFolder().toLower: " + folderTmp.getNameFolder().toLowerCase().endsWith(".mp3"));
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
                 intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
                 startActivity(intent);
-
-                Intent in = new Intent();
-                in.setAction(android.content.Intent.ACTION_VIEW);
-                File file = new File(folderTmp.getPathFolder());
-                in.setDataAndType(Uri.fromFile(file), "audio/*");
-                startActivity(in);
 
             } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp4")) {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
@@ -179,11 +181,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
                 intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "image/*");
                 startActivity(intent);
+            } else {
+                repaintUI(arrayList.get(position).getFile().getAbsolutePath());
             }
         }
     }
 
-    private void repainUI(String path) {
+    private void repaintUI(String path) {
         File directory = new File(path);
         File[] files = directory.listFiles(new FileFilter() {
             @Override
@@ -191,7 +195,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 return !pathname.isHidden();
             }
         });
-
         arrayList.clear();
         if (files != null) {
             if (files.length > 0) {
@@ -202,7 +205,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         }
-        if (arrayList.size() == 0) {
+        if (arrayList.isEmpty()) {
             rcv_storage.setVisibility(View.INVISIBLE);
             emptyView.setVisibility(View.VISIBLE);
         } else {
@@ -222,32 +225,52 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             @Override
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
-                    case 0:
+                    case 0: // copy
                         btn_paste.setVisibility(View.VISIBLE);
                         btn_paste.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                btn_paste.setVisibility(View.INVISIBLE);
                                 copyFileOrDirectory(copyTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-                                Log.d("HieuNV", "pathFinal: " + listPaths.get(listPaths.size() - 1));
+                                repaintUI(listPaths.get(listPaths.size() - 1));
                                 Toast.makeText(StorageActivity.this, "Successfully", Toast.LENGTH_LONG).show();
+                                btn_paste.setVisibility(View.INVISIBLE);
+                                btn_cancel.setVisibility(View.INVISIBLE);
+                            }
+                        });
+                        btn_cancel.setVisibility(View.VISIBLE);
+                        btn_cancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                btn_paste.setVisibility(View.INVISIBLE);
+                                btn_cancel.setVisibility(View.INVISIBLE);
                             }
                         });
                         break;
-                    case 1:
+                    case 1: // Move
                         btn_paste.setVisibility(View.VISIBLE);
                         btn_paste.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 cutFolder(copyTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+                                Toast.makeText(StorageActivity.this, "Move Successfully", Toast.LENGTH_LONG).show();
+                                btn_paste.setVisibility(View.INVISIBLE);
+                                btn_cancel.setVisibility(View.INVISIBLE);
+                            }
+                        });
+                        btn_cancel.setVisibility(View.VISIBLE);
+                        btn_cancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                btn_paste.setVisibility(View.INVISIBLE);
+                                btn_cancel.setVisibility(View.INVISIBLE);
                             }
                         });
                         break;
-                    case 2:
+                    case 2: // Rename
                         renameFolder();
                         break;
-                    case 3:
-                        if(deleteRecursive(new File(folderTmp.getPathFolder()))){
+                    case 3: // Delete
+                        if (deleteRecursive(new File(folderTmp.getPathFolder()))) {
                             Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(StorageActivity.this, "Delete Not Successfully", Toast.LENGTH_LONG).show();
@@ -259,36 +282,12 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.create().show();
     }
 
-
-//    private void copyFolder(String src, String dst) throws IOException {
-//        String[] listPathInput = src.split("/");
-//        File outPut = new File(dst + "/" + listPathInput[listPathInput.length - 1]);
-//        Log.d("HieuNV", "outPut: " + outPut);
-//        if (!outPut.exists()) {
-//            outPut.createNewFile();
-//        }
-//
-//        try (InputStream in = new FileInputStream(src)) {
-//            try (OutputStream out = new FileOutputStream(outPut)) {
-//                byte[] buf = new byte[1024];
-//                int len;
-//                while ((len = in.read(buf)) > 0) {
-//                    out.write(buf, 0, len);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                Log.d("HieuNV", "e2: " + e.toString());
-//            }
-//        }
-//    }
-
     public static void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
             File src = new File(srcDir);
             File dst = new File(dstDir, src.getName());
 
             if (src.isDirectory()) {
-
                 String files[] = src.list();
                 int filesLength = files.length;
                 for (int i = 0; i < filesLength; i++) {
@@ -329,27 +328,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     private void cutFolder(String src, String dst) {
         copyFileOrDirectory(src, dst);
-        repainUI(dst);
+        repaintUI(dst);
         deleteOnMove(new File(src));
-    }
-
-    private void createFolder() {
-        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            folderName = edt_addFolder.getText().toString().trim();
-
-            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
-            if (!file.exists()) {
-                if (file.mkdir()) {
-                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
-                    repainUI(listPaths.get(listPaths.size() - 1));
-                }
-            }
-        } else {
-            ActivityCompat.requestPermissions(StorageActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    CREATE_REQUEST_CODE);
-        }
     }
 
     boolean deleteRecursive(File fileOrDirectory) {
@@ -358,7 +338,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 deleteRecursive(child);
             }
         if (fileOrDirectory.delete()) {
-            int index = findDirectotyByName(fileOrDirectory.getName());
+            int index = findDirectoryByName(fileOrDirectory.getName());
             if (index != -1) {
                 arrayList.remove(index);
                 adapter.notifyDataSetChanged();
@@ -369,7 +349,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    public void deleteOnMove(File fileOrDirectory){
+    public void deleteOnMove(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
             for (File child : fileOrDirectory.listFiles()) {
                 deleteRecursive(child);
@@ -377,7 +357,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         fileOrDirectory.delete();
     }
 
-    public int findDirectotyByName(String name) {
+    public int findDirectoryByName(String name) {
         for (int i = 0; i < arrayList.size(); i++) {
             if (arrayList.get(i).getNameFolder().equals(name)) {
                 return i;
@@ -416,7 +396,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     if (oldFolder.exists()) {
                         if (oldFolder.renameTo(newFolder)) {
                             Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                            repainUI(listPaths.get(listPaths.size() - 1));
+                            repaintUI(listPaths.get(listPaths.size() - 1));
                         } else {
                             Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
                         }
@@ -454,7 +434,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
         listPaths.remove(listPaths.size() - 1);
-        repainUI(directory.getAbsolutePath());
+        repaintUI(directory.getAbsolutePath());
     }
 
     @Override
@@ -465,3 +445,4 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 }
+

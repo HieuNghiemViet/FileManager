@@ -38,6 +38,18 @@
         android:layout_marginStart="70dp"
         android:visibility="invisible"/>
 
+    <Button
+        android:id="@+id/btn_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CANCEL"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_paste"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="20dp"
+        android:visibility="invisible"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcv_storage"
         android:layout_width="match_parent"

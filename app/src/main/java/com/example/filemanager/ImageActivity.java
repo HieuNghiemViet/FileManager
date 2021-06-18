@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
@@ -35,9 +34,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.filemanager.adapter.ImageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
@@ -45,17 +42,12 @@ import com.example.filemanager.model.Image;
 
 import java.io.File;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-
 
 public class ImageActivity extends AppCompatActivity implements OnItemClickListener {
-    private static Uri extUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
-
+    private static Uri extStorageUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private int DELETE_REQUEST_CODE = 123;
     private int RENAME_REQUEST_CODE = 300;
     private RecyclerView recyclerView;
@@ -70,7 +62,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
-
     private Image imageTmp;
 
     private SwipeRefreshLayout swipe;
@@ -88,7 +79,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     private void initView() {
         recyclerView = (RecyclerView) findViewById(R.id.rcv_image);
         swipe = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutImage);
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -108,7 +98,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public void getImage() {
         arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
@@ -204,7 +193,11 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             @Override
             public void onClick(View v) {
                 try {
-                    renameFileUsingDisplayName(ImageActivity.this, image.getDisplayName());
+                    if (image.getPath().contains("Download")) {
+                        renameFileDownloadUsingDisplayName(ImageActivity.this, image.getDisplayName());
+                    } else {
+                        renameFileStorageUsingDisplayName(ImageActivity.this, image.getDisplayName());
+                    }
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
@@ -220,19 +213,18 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+    public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
-            Long id = getIdFromDisplayName(displayName);
+            Long id = getIdDownloadFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
-            Uri mUri = ContentUris.withAppendedId(extUri, id);
+            Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
             contentValues.clear();
 
-            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
-            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
-            contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
+            contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
             imageTmp.setTitle(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
@@ -260,10 +252,10 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         return false;
     }
 
-    public Long getIdFromDisplayName(String displayName) {
+    public Long getIdDownloadFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extUri, projection,
+        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
 
         assert cursor != null;
@@ -278,6 +270,85 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         }
         return null;
     }
+
+    public boolean renameFileStorageUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        try {
+            Long id = getIdStorageFromDisplayName(displayName);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+            contentValues.clear();
+
+            contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Images.Media.IS_PENDING, 0);
+            contentValues.put(MediaStore.Images.Media.TITLE, edt_rename.getText().toString());
+            resolver.update(mUri, contentValues, null, null);
+            imageTmp.setTitle(edt_rename.getText().toString());
+            adapter.notifyDataSetChanged();
+            getImage();
+            return true;
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
+        }
+        return false;
+    }
+
+    public Long getIdStorageFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
+    }
+
+
+    /*public Long getIdFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
+    }*/
+
 
     public Uri getUriFromDisplayName(Context context, String displayName) {
         String[] projection;
@@ -369,9 +440,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         startActivity(Intent.createChooser(shareIntent, "Share"));
     }
 
-    private void cutImage() {
-    }
-
     private void infoImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -436,7 +504,8 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         if ((requestCode == RENAME_REQUEST_CODE)) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
-                    renameFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
+                    renameFileDownloadUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
+                    renameFileStorageUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

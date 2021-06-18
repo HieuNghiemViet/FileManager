@@ -24,7 +24,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -40,7 +39,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class SongActivity extends AppCompatActivity implements OnItemClickListener {
-    private static Uri extUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extStorageUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private int RENAME_REQUEST_CODE = 1000;
     private int EDIT_REQUEST_CODE = 111;
     private ArrayList<Song> arrayList = new ArrayList<>();
@@ -89,7 +89,6 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public void getMusic() {
         arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
@@ -192,7 +191,11 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 String newName = edt_rename.getText().toString();
 
                 try {
-                    renameFileUsingDisplayName(SongActivity.this, song.getDisplayName());
+                    if (song.getPath().contains("Download")) {
+                        renameFileDownloadUsingDisplayName(SongActivity.this, song.getDisplayName());
+                    } else {
+                        renameFileStorageUsingDisplayName(SongActivity.this, song.getDisplayName());
+                    }
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
@@ -208,19 +211,18 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private boolean renameFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+    public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
-            Long id = getIdFromDisplayName(displayName);
+            Long id = getIdDownloadFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
-            Uri mUri = ContentUris.withAppendedId(extUri, id);
-
+            Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
             contentValues.clear();
 
-            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString());
-            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
+            contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
             songtmp.setNameSong(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
@@ -230,9 +232,11 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 RecoverableSecurityException recoverableSecurityException;
                 if (securityException instanceof RecoverableSecurityException) {
-                    recoverableSecurityException = (RecoverableSecurityException) securityException;
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
                 } else {
-                    throw new RuntimeException(securityException.getMessage(), securityException);
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
@@ -246,11 +250,12 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         return false;
     }
 
-    private Long getIdFromDisplayName(String displayName) {
+    public Long getIdDownloadFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extUri, projection,
+        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
         assert cursor != null;
         cursor.moveToFirst();
 
@@ -264,6 +269,65 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         return null;
     }
 
+    public boolean renameFileStorageUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        try {
+            Long id = getIdStorageFromDisplayName(displayName);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+            contentValues.clear();
+
+            contentValues.put(MediaStore.Audio.Media.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Audio.Media.IS_PENDING, 0);
+            contentValues.put(MediaStore.Audio.Media.TITLE, edt_rename.getText().toString());
+            resolver.update(mUri, contentValues, null, null);
+            songtmp.setNameSong(edt_rename.getText().toString());
+            adapter.notifyDataSetChanged();
+            getMusic();
+            return true;
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
+        }
+        return false;
+    }
+
+    public Long getIdStorageFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
+    }
+
+
     private void shareSong(Song song) {
         File songFile = new File(song.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -272,9 +336,6 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         startActivity(Intent.createChooser(shareIntent, "Share"));
-    }
-
-    private void cutSong() {
     }
 
     public Uri getUriFromDisplayName(Context context, String displayName) {
@@ -469,7 +530,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         if (requestCode == RENAME_REQUEST_CODE) {
             if (resultCode == SongActivity.RESULT_OK) {
                 try {
-                    renameFileUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
+                    renameFileStorageUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
+                    renameFileDownloadUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
