@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageView imageLogo;
-
     private ImageView imageVideo;
     private ImageView imageSound;
     private ImageView imageDocuments;

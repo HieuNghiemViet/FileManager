@@ -39,6 +39,7 @@ import android.widget.Toast;
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
+import com.example.filemanager.model.Image;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -146,6 +147,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 return !pathname.isHidden();
             }
         });
+
+
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
@@ -176,25 +179,27 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void onClick(int position) {
         if (!arrayList.isEmpty()) {
             folderTmp = arrayList.get(position);
-            listPaths.add(arrayList.get(position).getFile().getAbsolutePath());
-            //fix image when repaintUI
-            if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3") || folderTmp.getNameFolder().toLowerCase().endsWith(".wav")) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
-                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
-                startActivity(intent);
-
-            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp4")) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
-                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "video/*");
-                startActivity(intent);
-            } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".jpeg") ||
-                    folderTmp.getNameFolder().toLowerCase().endsWith(".jpg") ||
-                    folderTmp.getNameFolder().toLowerCase().endsWith(".png")) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
-                intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "image/*");
-                startActivity(intent);
-            } else {
+            File file = new File(folderTmp.getPathFolder());
+            if (file.isDirectory()) {
+                listPaths.add(arrayList.get(position).getFile().getAbsolutePath());
                 repaintUI(arrayList.get(position).getFile().getAbsolutePath());
+            } else {
+                if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp3") || folderTmp.getNameFolder().toLowerCase().endsWith(".wav")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                    intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "audio/*");
+                    startActivity(intent);
+
+                } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".mp4")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                    intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "video/*");
+                    startActivity(intent);
+                } else if (folderTmp.getNameFolder().toLowerCase().endsWith(".jpeg") ||
+                        folderTmp.getNameFolder().toLowerCase().endsWith(".jpg") ||
+                        folderTmp.getNameFolder().toLowerCase().endsWith(".png")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(folderTmp.getPathFolder()));
+                    intent.setDataAndType(Uri.parse(folderTmp.getPathFolder()), "image/*");
+                    startActivity(intent);
+                }
             }
         }
     }
@@ -284,8 +289,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         renameFolder();
                         break;
                     case 3: // Delete
-                        if (deleteRecursive(new File(folderTmp.getPathFolder()))) {
+                        if (deleteFileUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder())) {
                             Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+                            repaintUI(listPaths.get(listPaths.size() - 1));
                         } else {
                             Toast.makeText(StorageActivity.this, "Delete Not Successfully", Toast.LENGTH_LONG).show();
                         }
@@ -314,6 +320,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     String dst1 = dst.getPath();
                     copyFileOrDirectory(src1, dst1);
                 }
+
             } else {
                 copyFile(src, dst);
             }
@@ -347,8 +354,12 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     private void cutFolder(String src, String dst) {
         copyFileOrDirectory(src, dst);
+
         repaintUI(dst);
         deleteOnMove(new File(src));
+        MediaScannerConnection.scanFile(StorageActivity.this,
+                new String[]{src, dst},
+                null, null);
     }
 
     boolean deleteRecursive(File fileOrDirectory) {
@@ -366,6 +377,46 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         } else {
             return false;
         }
+    }
+
+
+    public static Uri getUriFromDisplayName(Context context, String name) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = context.getContentResolver().query(extUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{name}, null);
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return Uri.parse(extUri.toString() + "/" + fileId);
+        } else {
+            return null;
+        }
+
+    }
+
+    public static boolean deleteFileUsingDisplayName(Context context, String name) {
+        Uri uri = getUriFromDisplayName(context, name);
+        if (uri != null) {
+            final ContentResolver resolver = context.getContentResolver();
+            String[] selectionArgsPdf = new String[]{name};
+
+            try {
+                if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
     }
 
     public void deleteOnMove(File fileOrDirectory) {
@@ -412,9 +463,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
                 if (oldFolder.exists()) {
                     if (oldFolder.renameTo(newFolder)) {
-//                        MediaScannerConnection.scanFile(StorageActivity.this,
-//                                new String[]{newFolder.toString()},
-//                                null, null);
+                        MediaScannerConnection.scanFile(StorageActivity.this,
+                                new String[]{newFolder.getPath()},
+                                null, null);
                         Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
                         repaintUI(listPaths.get(listPaths.size() - 1));
                     } else {
@@ -460,5 +511,11 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 //            createFolder();
 //        }
 //    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
 }
 
