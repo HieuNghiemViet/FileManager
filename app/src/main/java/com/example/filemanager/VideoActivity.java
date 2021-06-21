@@ -55,7 +55,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_duration_video;
     private TextView tv_date_video;
     private TextView tv_cancel_dialog_video;
-    private Video videotmp;
+    private Video videoTmp;
     private TextView tv_rename_cancel;
     private TextView tv_rename_ok;
     private EditText edt_rename;
@@ -122,15 +122,15 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
 
     @Override
     public void onClick(int position) {
-        videotmp = arrayList.get(position);
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videotmp.getPathVideo()));
-        intent.setDataAndType(Uri.parse(videotmp.getPathVideo()), "video/*");
+        videoTmp = arrayList.get(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videoTmp.getPathVideo()));
+        intent.setDataAndType(Uri.parse(videoTmp.getPathVideo()), "video/*");
         startActivity(intent);
     }
 
     @Override
     public void onLongClick(int position) {
-        videotmp = arrayList.get(position);
+        videoTmp = arrayList.get(position);
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
@@ -140,16 +140,16 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                        infoVideo(Gravity.CENTER, videotmp);
+                        infoVideo(Gravity.CENTER, videoTmp);
                         break;
                     case 1:
-                        renameVideo(Gravity.CENTER, videotmp);
+                        renameVideo(Gravity.CENTER, videoTmp);
                         break;
                     case 2:
-                        deleteDialog(videotmp);
+                        deleteDialog(videoTmp);
                         break;
                     case 3:
-                        shareVideo(videotmp);
+                        shareVideo(videoTmp);
                         break;
                 }
             }
@@ -194,7 +194,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
             public void onClick(View v) {
                 try {
 
-                    if (video.getPathVideo().contains("Download")) {
+                    if (video.getPathVideo().contains("/storage/emulated/0/Download")) {
                         renameFileDownloadUsingDisplayName(VideoActivity.this, video.getDisplayName());
                     } else {
                         renameFileStorageUsingDisplayName(VideoActivity.this, video.getDisplayName());
@@ -228,7 +228,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
             contentValues.put(MediaStore.Video.Media.IS_PENDING, 0);
             contentValues.put(MediaStore.Video.Media.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
-            videotmp.setNameVideo(edt_rename.getText().toString());
+            videoTmp.setNameVideo(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
             getVideo();
             return true;
@@ -287,7 +287,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
             contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
             contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
-            videotmp.setNameVideo(edt_rename.getText().toString());
+            videoTmp.setNameVideo(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
             getVideo();
             return true;
@@ -436,7 +436,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                    arrayList.remove(videotmp);
+                    arrayList.remove(videoTmp);
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -493,7 +493,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
-                    deleteFileUsingDisplayName(VideoActivity.this, videotmp.getDisplayName());
+                    deleteFileUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
@@ -502,8 +502,8 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         if ((requestCode == RENAME_REQUEST_CODE)) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
-                    renameFileDownloadUsingDisplayName(VideoActivity.this, videotmp.getDisplayName());
-                    renameFileStorageUsingDisplayName(VideoActivity.this, videotmp.getDisplayName());
+                    renameFileDownloadUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
+                    renameFileStorageUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

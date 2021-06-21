@@ -40,9 +40,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
         askForPermission();
+        setContentView(R.layout.activity_main);
 
         imageLogo = (ImageView) findViewById(R.id.img_logo_image);
         imageVideo = (ImageView) findViewById(R.id.img_logo_video);
@@ -103,11 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void askForPermission() {
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         }
     }
 
@@ -119,14 +114,19 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission granted", Toast.LENGTH_LONG).show();
-                        
                     } else {
                         Toast.makeText(this, "No Permission granted", Toast.LENGTH_LONG).show();
                     }
                     return;
                 }
             }
+//            if (grantResults.length > 0 && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+//                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//                    Toast.makeText(this, "Permission granted 1", Toast.LENGTH_LONG).show();
+//                } else {
+//                    Toast.makeText(this, "No Permission granted", Toast.LENGTH_LONG).show();
+//                }
+//            }
         }
     }
-
 }

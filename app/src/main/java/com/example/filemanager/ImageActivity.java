@@ -193,7 +193,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             @Override
             public void onClick(View v) {
                 try {
-                    if (image.getPath().contains("Download")) {
+                    if (image.getPath().contains("/storage/emulated/0/Download")) {
                         renameFileDownloadUsingDisplayName(ImageActivity.this, image.getDisplayName());
                     } else {
                         renameFileStorageUsingDisplayName(ImageActivity.this, image.getDisplayName());
@@ -212,6 +212,47 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
+
+   /* public static boolean deleteFileUsingDisplayName(Context context, String displayName) {
+
+        Uri uri = getUriFromDisplayName(context, displayName);
+        if (uri != null) {
+            final ContentResolver resolver = context.getContentResolver();
+            String[] selectionArgsPdf = new String[]{displayName};
+
+            try {
+                resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf);
+                return true;
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // show some alert message
+            }
+        }
+        return false;
+
+    }
+    public static Uri getUriFromDisplayName(Context context, String displayName) {
+
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+
+        // TODO This will break if we have no matching item in the MediaStore.
+        Cursor cursor = context.getContentResolver().query(extUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return Uri.parse(extUri.toString() + "/" + fileId);
+        } else {
+            return null;
+        }
+
+    }*/
 
     public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
@@ -330,26 +371,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
     }
 
 
-    /*public Long getIdFromDisplayName(String displayName) {
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extStorageUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return fileId;
-        }
-        return null;
-    }*/
-
-
     public Uri getUriFromDisplayName(Context context, String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
@@ -459,9 +480,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
         tv_date.setText(sdf.format(image.getDate() * 1000));
 
-        Log.d("HieuNV", "DATE: " + sdf.format(image.getDate() * 1000));
-
-
         Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
         bitmap.getHeight();
         bitmap.getWidth();
@@ -487,7 +505,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             }
         });
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

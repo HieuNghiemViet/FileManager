@@ -1,5 +1,6 @@
 package com.example.filemanager;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -7,13 +8,23 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
+import android.app.RecoverableSecurityException;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -40,8 +51,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
+
     private static final int RENAME_REQUEST_CODE = 1000;
-    private static final int CREATE_REQUEST_CODE = 100;
+    private static final int OK_REQUEST_CODE = 2000;
+    private static final int CREATE_REQUEST_CODE = 3000;
     private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -65,7 +78,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_storage);
-
         initView();
         setDataAdapter();
     }
@@ -143,21 +155,21 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
     private void createFolder() {
-        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            folderName = edt_addFolder.getText().toString().trim();
-            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
-            if (!file.exists()) {
-                if (file.mkdir()) {
-                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
-                    repaintUI(listPaths.get(listPaths.size() - 1));
-                }
+//        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                == PackageManager.PERMISSION_GRANTED) {
+        folderName = edt_addFolder.getText().toString().trim();
+        File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+        if (!file.exists()) {
+            if (file.mkdir()) {
+                Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
+                repaintUI(listPaths.get(listPaths.size() - 1));
             }
-        } else {
-            ActivityCompat.requestPermissions(StorageActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    CREATE_REQUEST_CODE);
         }
+//        } else {
+//            ActivityCompat.requestPermissions(StorageActivity.this,
+//                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                    CREATE_REQUEST_CODE);
+//        }
     }
 
     @Override
@@ -224,6 +236,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int position) {
+//                if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                        == PackageManager.PERMISSION_GRANTED) {
                 switch (position) {
                     case 0: // copy
                         btn_paste.setVisibility(View.VISIBLE);
@@ -277,6 +291,11 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         }
                         break;
                 }
+//                } else {
+//                    ActivityCompat.requestPermissions(StorageActivity.this,
+//                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                            OK_REQUEST_CODE);
+//                }
             }
         });
         myBuilder.create().show();
@@ -388,25 +407,21 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        == PackageManager.PERMISSION_GRANTED) {
-                    File oldFolder = new File(listPaths.get(listPaths.size() - 1), folderTmp.getNameFolder());
-                    File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
-                    if (oldFolder.exists()) {
-                        if (oldFolder.renameTo(newFolder)) {
-                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                            repaintUI(listPaths.get(listPaths.size() - 1));
-                        } else {
-                            Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
-                        }
+            public void onClick(View v) { // rename đẻ ra nhieu ảnh giống nhau khác tên
+                File oldFolder = new File(listPaths.get(listPaths.size() - 1), folderTmp.getNameFolder());
+                File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
+                if (oldFolder.exists()) {
+                    if (oldFolder.renameTo(newFolder)) {
+//                        MediaScannerConnection.scanFile(StorageActivity.this,
+//                                new String[]{newFolder.toString()},
+//                                null, null);
+                        Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                        repaintUI(listPaths.get(listPaths.size() - 1));
+                    } else {
+                        Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
                     }
-                    dialog.dismiss();
-                } else {
-                    ActivityCompat.requestPermissions(StorageActivity.this,
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            RENAME_REQUEST_CODE);
                 }
+                dialog.dismiss();
             }
         });
 
@@ -437,12 +452,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         repaintUI(directory.getAbsolutePath());
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CREATE_REQUEST_CODE && (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-            createFolder();
-        }
-    }
+
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        if (requestCode == CREATE_REQUEST_CODE && (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+//            createFolder();
+//        }
+//    }
 }
 

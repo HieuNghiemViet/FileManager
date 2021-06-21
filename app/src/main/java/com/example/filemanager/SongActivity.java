@@ -44,7 +44,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     private int RENAME_REQUEST_CODE = 1000;
     private int EDIT_REQUEST_CODE = 111;
     private ArrayList<Song> arrayList = new ArrayList<>();
-    private Song songtmp;
+    private Song songTmp;
     private RecyclerView recyclerView;
     private SongAdapter adapter;
     private TextView tv_info_cancel_song;
@@ -126,16 +126,16 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
     @Override
     public void onClick(int position) {
-        songtmp = arrayList.get(position);
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songtmp.getPath()));
-        intent.setDataAndType(Uri.parse(songtmp.getPath()), "audio/*");
+        songTmp = arrayList.get(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songTmp.getPath()));
+        intent.setDataAndType(Uri.parse(songTmp.getPath()), "audio/*");
         startActivity(intent);
 
     }
 
     @Override
     public void onLongClick(int position) {
-        songtmp = arrayList.get(position);
+        songTmp = arrayList.get(position);
 
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
@@ -145,16 +145,16 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             public void onClick(DialogInterface dialog, int position) {
                 switch (position) {
                     case 0:
-                        infoSong(Gravity.CENTER, songtmp);
+                        infoSong(Gravity.CENTER, songTmp);
                         break;
                     case 1:
-                        renameSong(Gravity.CENTER, songtmp);
+                        renameSong(Gravity.CENTER, songTmp);
                         break;
                     case 2:
-                        deleteDialog(songtmp);
+                        deleteDialog(songTmp);
                         break;
                     case 3:
-                        shareSong(songtmp);
+                        shareSong(songTmp);
                         break;
                 }
             }
@@ -191,7 +191,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 String newName = edt_rename.getText().toString();
 
                 try {
-                    if (song.getPath().contains("Download")) {
+                    if (song.getPath().contains("/storage/emulated/0/Download")) {
                         renameFileDownloadUsingDisplayName(SongActivity.this, song.getDisplayName());
                     } else {
                         renameFileStorageUsingDisplayName(SongActivity.this, song.getDisplayName());
@@ -224,7 +224,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
             contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
-            songtmp.setNameSong(edt_rename.getText().toString());
+            songTmp.setNameSong(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
             getMusic();
             return true;
@@ -282,7 +282,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
             contentValues.put(MediaStore.Audio.Media.IS_PENDING, 0);
             contentValues.put(MediaStore.Audio.Media.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
-            songtmp.setNameSong(edt_rename.getText().toString());
+            songTmp.setNameSong(edt_rename.getText().toString());
             adapter.notifyDataSetChanged();
             getMusic();
             return true;
@@ -367,7 +367,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
-                    arrayList.remove(songtmp);
+                    arrayList.remove(songTmp);
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -521,7 +521,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == SongActivity.RESULT_OK) {
                 try {
-                    deleteFileUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
+                    deleteFileUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }
@@ -530,8 +530,8 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         if (requestCode == RENAME_REQUEST_CODE) {
             if (resultCode == SongActivity.RESULT_OK) {
                 try {
-                    renameFileStorageUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
-                    renameFileDownloadUsingDisplayName(SongActivity.this, songtmp.getDisplayName());
+                    renameFileStorageUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
+                    renameFileDownloadUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
                 }

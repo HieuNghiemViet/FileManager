@@ -62,7 +62,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Folder folder = folders.get(position);
         holder.tv_nameFolder.setText(folder.getNameFolder());
 
-
         if (folder.getNameFolder().toLowerCase().endsWith(".jpeg") ||
                 folder.getNameFolder().toLowerCase().endsWith(".jpg") ||
                 folder.getNameFolder().toLowerCase().endsWith(".png")) {
@@ -98,7 +97,12 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                 }
             }
         }
-        holder.tv_numberFile.setText(items + " Files");
+        if (items > 0) {
+            holder.tv_numberFile.setText(items + " Files");
+        } else {
+            holder.tv_numberFile.setText("empty");
+        }
+
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
