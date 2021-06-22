@@ -1,5 +1,6 @@
 package com.example.filemanager;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -43,7 +45,10 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -60,6 +65,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
     private Folder copyTmp;
+    private Folder deleteTmp;
     private TextView tv_addFolder_cancel;
     private TextView tv_addFolder_ok;
     private EditText edt_addFolder;
@@ -147,7 +153,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(),
+                        files[i].getAbsolutePath()));
             }
         }
     }
@@ -304,7 +311,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.create().show();
     }
 
-    public static void copyFileOrDirectory(String srcDir, String dstDir) {
+
+    public void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
             File src = new File(srcDir);
             File dst = new File(dstDir, src.getName());
@@ -319,6 +327,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             } else {
                 copyFile(src, dst);
+                MediaScannerConnection.scanFile(StorageActivity.this,
+                        new String[]{srcDir, dstDir},
+                        null, null);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -411,7 +422,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         return false;
     }
 
-
     public void deleteOnMove(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
             for (File child : fileOrDirectory.listFiles()) {
@@ -498,16 +508,14 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
             ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
-            contentValues.clear();
 
-            contentValues.put(MediaStore.Files.FileColumns._ID, edt_rename.getText().toString()); // doi DISPLAY_NAME --> ID
+            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString()); // doi DISPLAY_NAME --> ID
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
             contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
             resolver.update(mUri, contentValues, null, null);
             folderTmp.setNameFolder(edt_rename.getText().toString());
             return true;
-        } catch (SecurityException securityException) {
+        } catch (Exception securityException) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 RecoverableSecurityException recoverableSecurityException;
                 if (securityException instanceof RecoverableSecurityException) {

@@ -14,12 +14,14 @@ public class Folder implements Serializable {
     private String nameFolder;
     private Context context;
     private String pathFolder;
+    private String id;
 
     public Folder(Context context, File file, String nameFolder, String pathFolder) {
         this.file = file;
         this.nameFolder = nameFolder;
         this.context = context;
         this.pathFolder = pathFolder;
+        //this.id = id;
     }
 
     public File getFile() {
@@ -52,5 +54,13 @@ public class Folder implements Serializable {
 
     public void setPathFolder(String pathFolder) {
         this.pathFolder = pathFolder;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
