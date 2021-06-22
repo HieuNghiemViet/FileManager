@@ -1,13 +1,10 @@
 package com.example.filemanager;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
@@ -18,7 +15,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -28,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -39,7 +36,6 @@ import android.widget.Toast;
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
-import com.example.filemanager.model.Image;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -54,9 +50,10 @@ import java.util.Arrays;
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
 
     private static final int RENAME_REQUEST_CODE = 1000;
-    private static final int OK_REQUEST_CODE = 2000;
+    private static final int DELETE_REQUEST_CODE = 2000;
     private static final int CREATE_REQUEST_CODE = 3000;
-    private static Uri extUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extStorageUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
     private StorageAdapter adapter;
@@ -147,8 +144,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 return !pathname.isHidden();
             }
         });
-
-
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
@@ -158,21 +153,24 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     }
 
     private void createFolder() {
-//        if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                == PackageManager.PERMISSION_GRANTED) {
         folderName = edt_addFolder.getText().toString().trim();
-        File file = new File(listPaths.get(listPaths.size() - 1), folderName);
-        if (!file.exists()) {
-            if (file.mkdir()) {
-                Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
-                repaintUI(listPaths.get(listPaths.size() - 1));
+        if (folderName.toLowerCase().endsWith(".jpeg") ||
+                folderName.toLowerCase().endsWith(".jpg") ||
+                folderName.toLowerCase().endsWith(".png") ||
+                folderName.toLowerCase().endsWith(".mp3") ||
+                folderName.toLowerCase().endsWith(".wav") ||
+                folderName.toLowerCase().endsWith(".pdf") ||
+                folderName.toLowerCase().endsWith(".mp4")) {
+            Toast.makeText(StorageActivity.this, "Cannot Create Folder", Toast.LENGTH_LONG).show();
+        } else {
+            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+            if (!file.exists()) {
+                if (file.mkdir()) {
+                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_LONG).show();
+                    repaintUI(listPaths.get(listPaths.size() - 1));
+                }
             }
         }
-//        } else {
-//            ActivityCompat.requestPermissions(StorageActivity.this,
-//                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-//                    CREATE_REQUEST_CODE);
-//        }
     }
 
     @Override
@@ -241,8 +239,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int position) {
-//                if (ActivityCompat.checkSelfPermission(StorageActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                        == PackageManager.PERMISSION_GRANTED) {
                 switch (position) {
                     case 0: // copy
                         btn_paste.setVisibility(View.VISIBLE);
@@ -289,19 +285,20 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         renameFolder();
                         break;
                     case 3: // Delete
-                        if (deleteFileUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder())) {
-                            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
-                            repaintUI(listPaths.get(listPaths.size() - 1));
+                        //fix delete khi copy and move other folder
+                        File fileCheck = new File(folderTmp.getPathFolder());
+                        if (fileCheck.isDirectory()) {
+                            deleteRecursive(fileCheck);
                         } else {
-                            Toast.makeText(StorageActivity.this, "Delete Not Successfully", Toast.LENGTH_LONG).show();
+                            if (deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder())) {
+                                Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+                                repaintUI(listPaths.get(listPaths.size() - 1));
+                            } else {
+                                Toast.makeText(StorageActivity.this, "Delete Not Successfully", Toast.LENGTH_LONG).show();
+                            }
                         }
                         break;
                 }
-//                } else {
-//                    ActivityCompat.requestPermissions(StorageActivity.this,
-//                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-//                            OK_REQUEST_CODE);
-//                }
             }
         });
         myBuilder.create().show();
@@ -320,7 +317,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     String dst1 = dst.getPath();
                     copyFileOrDirectory(src1, dst1);
                 }
-
             } else {
                 copyFile(src, dst);
             }
@@ -354,7 +350,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     private void cutFolder(String src, String dst) {
         copyFileOrDirectory(src, dst);
-
         repaintUI(dst);
         deleteOnMove(new File(src));
         MediaScannerConnection.scanFile(StorageActivity.this,
@@ -379,12 +374,11 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-
-    public static Uri getUriFromDisplayName(Context context, String name) {
+    public static Uri getUriStorageFromDisplayName(Context context, String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = context.getContentResolver().query(extUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{name}, null);
+        Cursor cursor = context.getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
         assert cursor != null;
         cursor.moveToFirst();
 
@@ -393,19 +387,17 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             long fileId = cursor.getLong(columnIndex);
 
             cursor.close();
-            return Uri.parse(extUri.toString() + "/" + fileId);
+            return Uri.parse(extStorageUri.toString() + "/" + fileId);
         } else {
             return null;
         }
-
     }
 
-    public static boolean deleteFileUsingDisplayName(Context context, String name) {
-        Uri uri = getUriFromDisplayName(context, name);
+    public static boolean deleteFileStorageUsingDisplayName(Context context, String displayName) {
+        Uri uri = getUriStorageFromDisplayName(context, displayName);
         if (uri != null) {
             final ContentResolver resolver = context.getContentResolver();
-            String[] selectionArgsPdf = new String[]{name};
-
+            String[] selectionArgsPdf = new String[]{displayName};
             try {
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
                     return true;
@@ -418,6 +410,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
         return false;
     }
+
 
     public void deleteOnMove(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
@@ -446,6 +439,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         edt_rename = dialog.findViewById(R.id.edt_rename);
         edt_rename.setText(folderTmp.getNameFolder());
 
+
         Window window = dialog.getWindow();
         if (window == null) {
             return;
@@ -458,20 +452,29 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { // rename đẻ ra nhieu ảnh giống nhau khác tên
-                File oldFolder = new File(listPaths.get(listPaths.size() - 1), folderTmp.getNameFolder());
-                File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
-                if (oldFolder.exists()) {
-                    if (oldFolder.renameTo(newFolder)) {
-                        MediaScannerConnection.scanFile(StorageActivity.this,
-                                new String[]{newFolder.getPath()},
-                                null, null);
-                        Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        repaintUI(listPaths.get(listPaths.size() - 1));
+            public void onClick(View v) {
+                try {
+                    if (folderTmp.getPathFolder().contains("/storage/emulated/0/Download")) {
+                        if (!isEmptyString(edt_rename.getText().toString())) {
+                            renameFileDownloadUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(StorageActivity.this, "Name Cannot Be Empty", Toast.LENGTH_LONG).show();
+                        }
+
                     } else {
-                        Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
+                        if (!isEmptyString(edt_rename.getText().toString())) {
+                            renameFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(StorageActivity.this, "Name can not be empty", Toast.LENGTH_LONG).show();
+                        }
                     }
+
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
                 }
+                repaintUI(listPaths.get(listPaths.size() - 1));
                 dialog.dismiss();
             }
         });
@@ -482,6 +485,124 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 dialog.dismiss();
             }
         });
+    }
+
+    public static boolean isEmptyString(String text) {
+        return text == null || text.trim().equals("") || text.trim().length() <= 0;
+    }
+
+
+    public boolean renameFileStorageUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        try {
+            Long id = getIdStorageFromDisplayName(displayName);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+            contentValues.clear();
+
+            contentValues.put(MediaStore.Files.FileColumns._ID, edt_rename.getText().toString()); // doi DISPLAY_NAME --> ID
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
+            contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
+            resolver.update(mUri, contentValues, null, null);
+            folderTmp.setNameFolder(edt_rename.getText().toString());
+            return true;
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
+        }
+        return false;
+    }
+
+    //
+    public Long getIdStorageFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
+    }
+
+    public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
+        try {
+            Long id = getIdDownloadFromDisplayName(displayName);
+            ContentResolver resolver = context.getContentResolver();
+            Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
+            contentValues.clear();
+
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, edt_rename.getText().toString());
+            contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
+            contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
+            resolver.update(mUri, contentValues, null, null);
+            folderTmp.setNameFolder(edt_rename.getText().toString());
+            return true;
+        } catch (SecurityException securityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RecoverableSecurityException recoverableSecurityException;
+                if (securityException instanceof RecoverableSecurityException) {
+                    recoverableSecurityException =
+                            (RecoverableSecurityException) securityException;
+                } else {
+                    throw new RuntimeException(
+                            securityException.getMessage(), securityException);
+                }
+                IntentSender intentSender = recoverableSecurityException.getUserAction()
+                        .getActionIntent().getIntentSender();
+                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                        null, 0, 0, 0, null);
+            } else {
+                throw new RuntimeException(
+                        securityException.getMessage(), securityException);
+            }
+        }
+        return false;
+    }
+
+    public Long getIdDownloadFromDisplayName(String displayName) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
+                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return fileId;
+        }
+        return null;
     }
 
 
@@ -503,19 +624,24 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         repaintUI(directory.getAbsolutePath());
     }
 
-
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        if (requestCode == CREATE_REQUEST_CODE && (grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-//            createFolder();
-//        }
-//    }
-
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == DELETE_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+            }
+        }
+        if ((requestCode == RENAME_REQUEST_CODE)) {
+            if (resultCode == Activity.RESULT_OK) {
+                try {
+                    renameFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                    renameFileDownloadUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
-
 }
 

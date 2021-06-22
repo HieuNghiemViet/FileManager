@@ -213,47 +213,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         });
     }
 
-   /* public static boolean deleteFileUsingDisplayName(Context context, String displayName) {
-
-        Uri uri = getUriFromDisplayName(context, displayName);
-        if (uri != null) {
-            final ContentResolver resolver = context.getContentResolver();
-            String[] selectionArgsPdf = new String[]{displayName};
-
-            try {
-                resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf);
-                return true;
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                // show some alert message
-            }
-        }
-        return false;
-
-    }
-    public static Uri getUriFromDisplayName(Context context, String displayName) {
-
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-
-        // TODO This will break if we have no matching item in the MediaStore.
-        Cursor cursor = context.getContentResolver().query(extUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return Uri.parse(extUri.toString() + "/" + fileId);
-        } else {
-            return null;
-        }
-
-    }*/
-
     public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdDownloadFromDisplayName(displayName);
