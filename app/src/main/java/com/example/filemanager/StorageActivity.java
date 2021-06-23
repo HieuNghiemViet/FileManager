@@ -1,6 +1,5 @@
 package com.example.filemanager;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
@@ -8,23 +7,17 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileUtils;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -47,10 +40,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
@@ -304,7 +294,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                                     });
                             Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                         } else {
-                            if (deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder())) {
+                            if (deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder())) {
                                 Log.d("HieuNV", " " + folderTmp.getPathFolder());
                                 Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                                 MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
@@ -319,7 +309,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         }
                         break;
                     case 4:
-                        zipFile();
+                      //  zipFile();
                     case 5:
                        // unZipFile();
                 }
@@ -411,7 +401,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 MediaScannerConnection.scanFile(StorageActivity.this, new String[]{srcDir, dstDir},
                         null, new MediaScannerConnection.OnScanCompletedListener() {
                             public void onScanCompleted(String path, Uri uri) {
-
                             }
                         });
             }
@@ -470,13 +459,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    public static boolean deleteFileStorageUsingDisplayName(Context context, String displayName) {
-        Uri uri = getUriStorageFromDisplayName(context, displayName);
+    public boolean deleteFileStorageUsingPath(Context context, String path) {
+        Uri uri = getIdStorageFromPath(path);
         if (uri != null) {
             final ContentResolver resolver = context.getContentResolver();
-            String[] selectionArgsPdf = new String[]{displayName};
+            String[] selectionArgsPdf = new String[]{path};
             try {
-                if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
+                if (resolver.delete(uri, MediaStore.Files.FileColumns.DATA + "=?", selectionArgsPdf) > 0) {
                     return true;
                 } else {
                     return false;
@@ -505,6 +494,25 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         } else {
             return null;
         }
+    }
+
+    public Uri getIdStorageFromPath(String path) {
+        String[] projection;
+        projection = new String[]{MediaStore.Files.FileColumns._ID};
+        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+                MediaStore.Files.FileColumns.DATA + " LIKE ?", new String[]{path}, null);
+
+        assert cursor != null;
+        cursor.moveToFirst();
+
+        if (cursor.getCount() > 0) {
+            int columnIndex = cursor.getColumnIndex(projection[0]);
+            long fileId = cursor.getLong(columnIndex);
+
+            cursor.close();
+            return Uri.parse(extStorageUri.toString() + "/" + fileId);
+        }
+        return null;
     }
 
     public void deleteOnMove(File fileOrDirectory) {
@@ -553,10 +561,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 if (oldFolder.exists()) {
                     if (oldFolder.renameTo(newFolder)) {
                         Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        // check
-                        //  if (oldFolder.length() <= 0) {
-                        deleteFileStorageUsingDisplayName(StorageActivity.this, oldFolder.getName());
-                        // }
+                        deleteFileStorageUsingPath(StorageActivity.this, oldFolder.getPath());
                         repaintUI(listPaths.get(listPaths.size() - 1));
                         MediaScannerConnection.scanFile(StorageActivity.this, new String[]{listPaths.get(listPaths.size() - 1), listPaths.get(listPaths.size() - 1)},
                                 null, new MediaScannerConnection.OnScanCompletedListener() {
@@ -606,7 +611,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == DELETE_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder());
             }
         }
         if ((requestCode == RENAME_REQUEST_CODE)) {
