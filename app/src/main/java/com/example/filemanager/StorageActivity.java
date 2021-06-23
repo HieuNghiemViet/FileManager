@@ -65,7 +65,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
     private Folder copyTmp;
-    private Folder deleteTmp;
     private TextView tv_addFolder_cancel;
     private TextView tv_addFolder_ok;
     private EditText edt_addFolder;
@@ -153,8 +152,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(),
-                        files[i].getAbsolutePath()));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
             }
         }
     }
@@ -292,10 +290,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         renameFolder();
                         break;
                     case 3: // Delete
-                        //fix delete khi copy and move other folder
                         File fileCheck = new File(folderTmp.getPathFolder());
                         if (fileCheck.isDirectory()) {
                             deleteRecursive(fileCheck);
+                            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                         } else {
                             if (deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder())) {
                                 Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
@@ -327,9 +325,12 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             } else {
                 copyFile(src, dst);
-                MediaScannerConnection.scanFile(StorageActivity.this,
-                        new String[]{srcDir, dstDir},
-                        null, null);
+                MediaScannerConnection.scanFile(this, new String[]{srcDir, dstDir},
+                        null, new MediaScannerConnection.OnScanCompletedListener() {
+                            public void onScanCompleted(String path, Uri uri) {
+
+                            }
+                        });
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -363,9 +364,12 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         copyFileOrDirectory(src, dst);
         repaintUI(dst);
         deleteOnMove(new File(src));
-        MediaScannerConnection.scanFile(StorageActivity.this,
-                new String[]{src, dst},
-                null, null);
+        MediaScannerConnection.scanFile(this, new String[]{src, dst},
+                null, new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+
+                    }
+                });
     }
 
     boolean deleteRecursive(File fileOrDirectory) {
@@ -463,28 +467,23 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         tv_rename_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    if (folderTmp.getPathFolder().contains("/storage/emulated/0/Download")) {
-                        if (!isEmptyString(edt_rename.getText().toString())) {
-                            renameFileDownloadUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
-                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(StorageActivity.this, "Name Cannot Be Empty", Toast.LENGTH_LONG).show();
-                        }
+                File oldFolder = new File(listPaths.get(listPaths.size() - 1), folderTmp.getNameFolder());
+                File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
+                if (oldFolder.exists()) {
+                    if (oldFolder.renameTo(newFolder)) {
+                        Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                        deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                        repaintUI(listPaths.get(listPaths.size() - 1));
+                        MediaScannerConnection.scanFile(StorageActivity.this, new String[]{listPaths.get(listPaths.size() - 1), listPaths.get(listPaths.size() - 1)},
+                                null, new MediaScannerConnection.OnScanCompletedListener() {
+                                    public void onScanCompleted(String path, Uri uri) {
 
+                                    }
+                                });
                     } else {
-                        if (!isEmptyString(edt_rename.getText().toString())) {
-                            renameFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
-                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(StorageActivity.this, "Name can not be empty", Toast.LENGTH_LONG).show();
-                        }
+                        Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
                     }
-
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
                 }
-                repaintUI(listPaths.get(listPaths.size() - 1));
                 dialog.dismiss();
             }
         });
@@ -642,12 +641,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
         if ((requestCode == RENAME_REQUEST_CODE)) {
             if (resultCode == Activity.RESULT_OK) {
-                try {
-                    renameFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
-                    renameFileDownloadUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
-                }
+                renameFolder();
             }
         }
     }
