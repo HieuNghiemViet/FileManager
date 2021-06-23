@@ -309,7 +309,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.create().show();
     }
 
-
     public void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
             File src = new File(srcDir);
@@ -472,7 +471,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 if (oldFolder.exists()) {
                     if (oldFolder.renameTo(newFolder)) {
                         Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
+                        deleteFileStorageUsingDisplayName(StorageActivity.this, oldFolder.getName());
                         repaintUI(listPaths.get(listPaths.size() - 1));
                         MediaScannerConnection.scanFile(StorageActivity.this, new String[]{listPaths.get(listPaths.size() - 1), listPaths.get(listPaths.size() - 1)},
                                 null, new MediaScannerConnection.OnScanCompletedListener() {
@@ -499,119 +498,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public static boolean isEmptyString(String text) {
         return text == null || text.trim().equals("") || text.trim().length() <= 0;
     }
-
-
-    public boolean renameFileStorageUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
-        try {
-            Long id = getIdStorageFromDisplayName(displayName);
-            ContentResolver resolver = context.getContentResolver();
-            Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
-            ContentValues contentValues = new ContentValues();
-
-            contentValues.put(MediaStore.Files.FileColumns.DISPLAY_NAME, edt_rename.getText().toString()); // doi DISPLAY_NAME --> ID
-            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 0);
-            contentValues.put(MediaStore.Files.FileColumns.TITLE, edt_rename.getText().toString());
-            resolver.update(mUri, contentValues, null, null);
-            folderTmp.setNameFolder(edt_rename.getText().toString());
-            return true;
-        } catch (Exception securityException) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                RecoverableSecurityException recoverableSecurityException;
-                if (securityException instanceof RecoverableSecurityException) {
-                    recoverableSecurityException =
-                            (RecoverableSecurityException) securityException;
-                } else {
-                    throw new RuntimeException(
-                            securityException.getMessage(), securityException);
-                }
-                IntentSender intentSender = recoverableSecurityException.getUserAction()
-                        .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
-                        null, 0, 0, 0, null);
-            } else {
-                throw new RuntimeException(
-                        securityException.getMessage(), securityException);
-            }
-        }
-        return false;
-    }
-
-    //
-    public Long getIdStorageFromDisplayName(String displayName) {
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extStorageUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return fileId;
-        }
-        return null;
-    }
-
-    public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
-        try {
-            Long id = getIdDownloadFromDisplayName(displayName);
-            ContentResolver resolver = context.getContentResolver();
-            Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
-            contentValues.clear();
-
-            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, edt_rename.getText().toString());
-            contentValues.put(MediaStore.Downloads.IS_PENDING, 0);
-            contentValues.put(MediaStore.Downloads.TITLE, edt_rename.getText().toString());
-            resolver.update(mUri, contentValues, null, null);
-            folderTmp.setNameFolder(edt_rename.getText().toString());
-            return true;
-        } catch (SecurityException securityException) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                RecoverableSecurityException recoverableSecurityException;
-                if (securityException instanceof RecoverableSecurityException) {
-                    recoverableSecurityException =
-                            (RecoverableSecurityException) securityException;
-                } else {
-                    throw new RuntimeException(
-                            securityException.getMessage(), securityException);
-                }
-                IntentSender intentSender = recoverableSecurityException.getUserAction()
-                        .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
-                        null, 0, 0, 0, null);
-            } else {
-                throw new RuntimeException(
-                        securityException.getMessage(), securityException);
-            }
-        }
-        return false;
-    }
-
-    public Long getIdDownloadFromDisplayName(String displayName) {
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return fileId;
-        }
-        return null;
-    }
-
 
     @Override
     public void onBackPressed() {
