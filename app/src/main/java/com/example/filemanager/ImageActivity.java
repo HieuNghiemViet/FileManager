@@ -351,6 +351,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         }
     }
 
+
     public boolean deleteFileUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         Uri uri = getUriFromDisplayName(context, displayName);
         if (uri != null) {
@@ -358,6 +359,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
             String[] selectionArgsPdf = new String[]{displayName};
 
             try {
+                //
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
                     arrayList.remove(imageTmp);
                     adapter.notifyDataSetChanged();
@@ -394,6 +396,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
+                            //
                             deleteFileUsingDisplayName(ImageActivity.this, image.getDisplayName());
                         } catch (IntentSender.SendIntentException e) {
                             e.printStackTrace();
@@ -471,6 +474,7 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         if (requestCode == DELETE_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 try {
+                    //
                     deleteFileUsingDisplayName(ImageActivity.this, imageTmp.getDisplayName());
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();

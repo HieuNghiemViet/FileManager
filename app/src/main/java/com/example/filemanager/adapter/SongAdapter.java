@@ -64,7 +64,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
 
         Glide.with(context)
                 .load(getAlbumArtURI(song.getImageSong()))
-                .placeholder(R.drawable.ic_music)
+                .placeholder(R.drawable.compact_disc)
                 .into(holder.ivSong);
 
         holder.ivSong.setOnClickListener(new View.OnClickListener() {

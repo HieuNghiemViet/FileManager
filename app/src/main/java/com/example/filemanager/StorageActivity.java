@@ -38,6 +38,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -48,9 +49,9 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
-    private static final int BUFFER = 80000;
     private static final int RENAME_REQUEST_CODE = 1000;
     private static final int DELETE_REQUEST_CODE = 2000;
+    private static final int BUFFER = 4000;
     private static Uri extStorageUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -58,6 +59,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
     private Folder copyTmp;
+    private Folder deleteTmp;
     private TextView tv_addFolder_cancel;
     private TextView tv_addFolder_ok;
     private EditText edt_addFolder;
@@ -231,6 +233,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void onLongClick(int position) {
         folderTmp = arrayList.get(position);
         copyTmp = arrayList.get(position);
+        // deleteTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Copy", "Move", "Rename", "Delete", "Zip", "UnZip"};
 
@@ -286,7 +289,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         File fileCheck = new File(folderTmp.getPathFolder());
                         if (fileCheck.isDirectory()) {
                             deleteRecursive(fileCheck);
-                            // deleteFileStorageUsingDisplayName(StorageActivity.this, folderTmp.getNameFolder());
                             MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
                                     null, new MediaScannerConnection.OnScanCompletedListener() {
                                         public void onScanCompleted(String path, Uri uri) {
@@ -295,7 +297,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                             Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                         } else {
                             if (deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder())) {
-                                Log.d("HieuNV", " " + folderTmp.getPathFolder());
                                 Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                                 MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
                                         null, new MediaScannerConnection.OnScanCompletedListener() {
@@ -304,21 +305,43 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                                         });
                                 repaintUI(listPaths.get(listPaths.size() - 1));
                             } else {
-                                Toast.makeText(StorageActivity.this, "Delete Not Successfully", Toast.LENGTH_LONG).show();
+                                deleteRecursive(fileCheck);
+                                Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+                                repaintUI(listPaths.get(listPaths.size() - 1));
                             }
                         }
                         break;
-                    case 4:
-                      //  zipFile();
-                    case 5:
-                       // unZipFile();
+                    case 4: // zip
+                        String[] s = new String[2];
+                        s[0] = "/storage/emulated/0/Movies/Zip/1.mp3";
+//                        s[1] = "/storage/emulated/0/Movies/Zip/12.mp3";
+//                        //   s[0] = "/storage/emulated/0/Movies/Zip";
+//                        zipFile(s, listPaths.get(listPaths.size() - 1) + "/" + "hdz" + ".zip");
+//                        repaintUI(listPaths.get(listPaths.size() - 1));
+
+                       File files = new File(folderTmp.getPathFolder());
+                        ArrayList<String> listFileZip = new ArrayList<>();
+                         if(files.isDirectory()) {
+                            listFileZip.add(files.listFiles().toString());
+                        }
+                        zipFile(listFileZip, listPaths.get(listPaths.size() - 1) + "/" + "hdz" + ".zip" );
+
+
+
+                        repaintUI(listPaths.get(listPaths.size() - 1));
+                    case 5: // unZip
+                        // unZipFile();
                 }
             }
         });
         myBuilder.create().show();
     }
 
-    private void zipFile(String[] _files, String zipFileName) {
+
+
+
+
+    private void zipFile(ArrayList<String> files, String zipFileName) {
         try {
             BufferedInputStream origin = null;
             FileOutputStream dest = new FileOutputStream(zipFileName);
@@ -326,12 +349,12 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     dest));
             byte data[] = new byte[BUFFER];
 
-            for (int i = 0; i < _files.length; i++) {
-                Log.v("HieuNV", "Adding: " + _files[i]);
-                FileInputStream fi = new FileInputStream(_files[i]);
+            for (int i = 0; i < files.size(); i++) {
+                Log.d("HieuNV", "Adding: " + files.size());
+                FileInputStream fi = new FileInputStream(files.get(i));
                 origin = new BufferedInputStream(fi, BUFFER);
 
-                ZipEntry entry = new ZipEntry(_files[i].substring(_files[i].lastIndexOf("/") + 1));
+                ZipEntry entry = new ZipEntry(files.get(i).substring(files.get(i).lastIndexOf("/") + 1));
                 out.putNextEntry(entry);
                 int count;
 
@@ -376,6 +399,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
+
     private void dirChecker(String dir) {
         File f = new File(dir);
         if (!f.isDirectory()) {
@@ -408,6 +432,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             e.printStackTrace();
         }
     }
+
     public static void copyFile(File sourceFile, File destFile) throws IOException {
         if (!destFile.getParentFile().exists())
             destFile.getParentFile().mkdirs();
@@ -442,7 +467,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 });
     }
 
-    boolean deleteRecursive(File fileOrDirectory) {
+    private boolean deleteRecursive(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
             for (File child : fileOrDirectory.listFiles()) {
                 deleteRecursive(child);
@@ -475,25 +500,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         }
         return false;
-    }
-
-    public static Uri getUriStorageFromDisplayName(Context context, String displayName) {
-        String[] projection;
-        projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = context.getContentResolver().query(extStorageUri, projection,
-                MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-        assert cursor != null;
-        cursor.moveToFirst();
-
-        if (cursor.getCount() > 0) {
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            long fileId = cursor.getLong(columnIndex);
-
-            cursor.close();
-            return Uri.parse(extStorageUri.toString() + "/" + fileId);
-        } else {
-            return null;
-        }
     }
 
     public Uri getIdStorageFromPath(String path) {
@@ -560,14 +566,16 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 File newFolder = new File(listPaths.get(listPaths.size() - 1), edt_rename.getText().toString());
                 if (oldFolder.exists()) {
                     if (oldFolder.renameTo(newFolder)) {
-                        Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
-                        deleteFileStorageUsingPath(StorageActivity.this, oldFolder.getPath());
-                        repaintUI(listPaths.get(listPaths.size() - 1));
-                        MediaScannerConnection.scanFile(StorageActivity.this, new String[]{listPaths.get(listPaths.size() - 1), listPaths.get(listPaths.size() - 1)},
-                                null, new MediaScannerConnection.OnScanCompletedListener() {
-                                    public void onScanCompleted(String path, Uri uri) {
-                                    }
-                                });
+                        if (!isEmptyString(edt_rename.getText().toString())) {
+                            Toast.makeText(StorageActivity.this, "Rename Successfully", Toast.LENGTH_LONG).show();
+                            deleteFileStorageUsingPath(StorageActivity.this, oldFolder.getPath());
+                            repaintUI(listPaths.get(listPaths.size() - 1));
+                            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{listPaths.get(listPaths.size() - 1), listPaths.get(listPaths.size() - 1)},
+                                    null, new MediaScannerConnection.OnScanCompletedListener() {
+                                        public void onScanCompleted(String path, Uri uri) {
+                                        }
+                                    });
+                        }
                     } else {
                         Toast.makeText(StorageActivity.this, "Rename Not Successfully ", Toast.LENGTH_LONG).show();
                     }
@@ -620,5 +628,64 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         }
     }
+
+//    public boolean extractFileZip(Context context, String pathFileZip, String pathFolderSave) {
+//        File zipFile = new File(pathFileZip);
+//        File targetDirectory = new File(pathFolderSave);
+//        targetDirectory.mkdirs();
+//        ZipInputStream zis;
+//        try {
+//            zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
+//            ZipEntry ze;
+//            int count;
+//            byte[] buffer = new byte[8192];
+//            while ((ze = zis.getNextEntry()) != null) {
+//                File file = new File(targetDirectory, ze.getName());
+//                File dir = ze.isDirectory() ? file : file.getParentFile();
+//                if (!dir.isDirectory() && !dir.mkdirs())
+//                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
+//                if (ze.isDirectory())
+//                    continue;
+//                FileOutputStream fout = new FileOutputStream(file);
+//                try {
+//                    while ((count = zis.read(buffer)) != -1)
+//                        fout.write(buffer, 0, count);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    fout.close();
+//                }
+//                scanFile(context, file.getPath(), false);
+//            }
+//            Log.e("extractFileZip", "COMPLETE");
+//            zis.close();
+//            deleteRecursive(new File(pathFileZip));
+//        } catch (Exception e) {
+//            deleteRecursive(new File(pathFileZip));
+//            e.printStackTrace();
+//            Log.e("extractFileZip", "EROR");
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    public static void scanFile(final Context context, String pathFile, final boolean isPushNotify) {
+//        try {
+//            MediaScannerConnection.scanFile(context, new String[]{pathFile}, null, new MediaScannerConnection.OnScanCompletedListener() {
+//                public void onScanCompleted(String path, Uri uri) {
+//                    // if (isPushNotify) {
+//                    // EventBus.getDefault().post(new EventBusEntity(EventBusEntity.ON_NOTIFY_SONG_LOADED));
+//                    // }
+//                    // if (BuildConfig.DEBUG) {
+//                    // Log.e(TAG, "onScanCompleted: " + path);
+//                    // }
+//                }
+//            });
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
 }
 

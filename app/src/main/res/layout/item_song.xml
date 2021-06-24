@@ -12,12 +12,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/iv_img_song"
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@drawable/record"
+            android:src="@drawable/compact_disc"
             android:padding="2dp"/>
 
         <LinearLayout

@@ -70,7 +70,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                     .into(holder.img_folder);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".mp3") || folder.getNameFolder().toLowerCase().endsWith(".wav")) {
             Glide.with(context).load(getAlbumImage(folder.getPathFolder()))
-                    .placeholder(R.drawable.ic_music)
+                    .placeholder(R.drawable.compact_disc)
                     .into(holder.img_folder);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".mp4")) {
             Glide.with(context).load(folder.getPathFolder())
@@ -84,6 +84,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             holder.img_folder.setImageResource(R.drawable.ic_txt_file_symbol);
         } else if (folder.getNameFolder().toLowerCase().endsWith(".zip")) {
             holder.img_folder.setImageResource(R.drawable.ic_zip);
+        } else if (folder.getNameFolder().toLowerCase().endsWith(".apk")) {
+            holder.img_folder.setImageResource(R.drawable.ic_apk_file);
         } else {
             holder.img_folder.setImageResource(R.drawable.ic_folder);
         }
