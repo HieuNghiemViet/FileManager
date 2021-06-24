@@ -92,6 +92,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     public void getMusic() {
         arrayList.clear();
         ContentResolver contentResolver = getContentResolver();
+
         Uri songUri;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             songUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
