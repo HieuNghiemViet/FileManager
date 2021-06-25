@@ -310,10 +310,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 //                        ZipManager.zipFile(arr, folderTmp.getPathFolder()+ ".zip");
 
                         myAsyncTaskZip.execute();
-
+                        repaintUI(listPaths.get(listPaths.size() - 1));
                     case 5: // unZip
                         myAsyncTaskUnZip.execute();
-
+                        repaintUI(listPaths.get(listPaths.size() - 1));
                 }
             }
         });
@@ -328,7 +328,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             String[] arr = new String[arrayListZip.size()];
             arrayListZip.toArray(arr);
             ZipManager.zipFile(arr, folderTmp.getPathFolder()+ ".zip");
-            repaintUI(listPaths.get(listPaths.size() - 1));
+
             return null;
         }
     }
@@ -337,7 +337,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         @Override
         protected Object doInBackground(Object[] objects) {
              ZipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-            repaintUI(listPaths.get(listPaths.size() - 1));
+
             return null;
         }
     }
@@ -345,17 +345,23 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void getListPathToZip(String path) {
         File src = new File(path);
 
-        String files[] = src.list();
-        int filesLength = files.length;
-        for (int i = 0; i < filesLength; i++) {
-            files[i] = path + "/" + files[i];
-        }
-        for (int i = 0; i < filesLength; i++) {
-            File f = new File(files[i]);
-            if (f.isDirectory()) {
-                getListPathToZip(files[i]);
-            } else {
-                arrayListZip.add(files[i]);
+        if (src != null) {
+            String files[] = src.list();
+            if (files != null) {
+                if (files.length > 0) {
+                    int filesLength = files.length;
+                    for (int i = 0; i < filesLength; i++) {
+                        files[i] = path + "/" + files[i];
+                    }
+                    for (int i = 0; i < filesLength; i++) {
+                        File f = new File(files[i]);
+                        if (f.isDirectory()) {
+                            getListPathToZip(files[i]);
+                        } else {
+                            arrayListZip.add(files[i]);
+                        }
+                    }
+                }
             }
         }
     }
