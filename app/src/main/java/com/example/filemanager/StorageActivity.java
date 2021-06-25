@@ -16,10 +16,10 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -33,25 +33,18 @@ import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
     private static final int RENAME_REQUEST_CODE = 1000;
     private static final int DELETE_REQUEST_CODE = 2000;
-    private static final int BUFFER = 4000;
     private static Uri extStorageUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
@@ -59,7 +52,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
     private Folder copyTmp;
-    private Folder deleteTmp;
     private TextView tv_addFolder_cancel;
     private TextView tv_addFolder_ok;
     private EditText edt_addFolder;
@@ -72,6 +64,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private EditText edt_rename;
     private TextView emptyView;
     private ArrayList<String> arrayListZip = new ArrayList();
+    MyAsyncTaskZip myAsyncTaskZip = new MyAsyncTaskZip();
+    MyAsyncTaskUnZip myAsyncTaskUnZip = new MyAsyncTaskUnZip();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,7 +228,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void onLongClick(int position) {
         folderTmp = arrayList.get(position);
         copyTmp = arrayList.get(position);
-        // deleteTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
         final String[] feature = {"Copy", "Move", "Rename", "Delete", "Zip", "UnZip"};
 
@@ -288,7 +281,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         break;
                     case 3: // Delete
                         File fileCheck = new File(folderTmp.getPathFolder());
-                        if (fileCheck.isDirectory()) {
+                        if (fileCheck.isDirectory() || folderTmp.getPathFolder().toLowerCase().endsWith(".zip")) {
                             deleteRecursive(fileCheck);
                             MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
                                     null, new MediaScannerConnection.OnScanCompletedListener() {
@@ -297,47 +290,66 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                                     });
                             Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
                         } else {
-                            if (deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder())) {
-                                Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
-                                MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
-                                        null, new MediaScannerConnection.OnScanCompletedListener() {
-                                            public void onScanCompleted(String path, Uri uri) {
-                                            }
-                                        });
-                                repaintUI(listPaths.get(listPaths.size() - 1));
-                            } else {
+                            if (!deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder())) {
                                 deleteRecursive(fileCheck);
-                                Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
-                                repaintUI(listPaths.get(listPaths.size() - 1));
                             }
+                            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+                            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
+                                    null, new MediaScannerConnection.OnScanCompletedListener() {
+                                        public void onScanCompleted(String path, Uri uri) {
+                                        }
+                                    });
+                            repaintUI(listPaths.get(listPaths.size() - 1));
                         }
                         break;
                     case 4: // zip
+//                        arrayListZip.clear();
+//                        getListPathToZip(folderTmp.getPathFolder());
+//                        String[] arr = new String[arrayListZip.size()];
+//                        arrayListZip.toArray(arr);
+//                        ZipManager.zipFile(arr, folderTmp.getPathFolder()+ ".zip");
 
-                        arrayListZip.clear();
-                        getListPathToZip(listPaths.get(listPaths.size() - 1));
-                        String[] a = new String[arrayListZip.size()];
-                        arrayListZip.toArray(a);
-                        zipFile(a, listPaths.get(listPaths.size() - 1) + "/hdz" + ".zip");
-                        Log.d("HieuNV", "arrayList: " + arrayListZip.size());
-                        repaintUI(listPaths.get(listPaths.size() - 1));
+                        myAsyncTaskZip.execute();
+
                     case 5: // unZip
-                        //  unZipFile(folderTmp.getPathFolder() , listPaths.get(listPaths.size() - 2));
-                        extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-                        repaintUI(listPaths.get(listPaths.size() - 1));
+                        myAsyncTaskUnZip.execute();
+
                 }
             }
         });
         myBuilder.create().show();
     }
 
-    private void getListPathToZip(String path) {
+    private class MyAsyncTaskZip extends AsyncTask {
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            arrayListZip.clear();
+            getListPathToZip(folderTmp.getPathFolder());
+            String[] arr = new String[arrayListZip.size()];
+            arrayListZip.toArray(arr);
+            ZipManager.zipFile(arr, folderTmp.getPathFolder()+ ".zip");
+            repaintUI(listPaths.get(listPaths.size() - 1));
+            return null;
+        }
+    }
+
+    private class MyAsyncTaskUnZip extends AsyncTask {
+        @Override
+        protected Object doInBackground(Object[] objects) {
+             ZipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+            repaintUI(listPaths.get(listPaths.size() - 1));
+            return null;
+        }
+    }
+
+    public void getListPathToZip(String path) {
         File src = new File(path);
+
         String files[] = src.list();
-        for (int i = 0; i < files.length; i++) {
+        int filesLength = files.length;
+        for (int i = 0; i < filesLength; i++) {
             files[i] = path + "/" + files[i];
         }
-        int filesLength = files.length;
         for (int i = 0; i < filesLength; i++) {
             File f = new File(files[i]);
             if (f.isDirectory()) {
@@ -348,70 +360,102 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    private void zipFile(String[] files, String zipFileName) {
-        try {
-            BufferedInputStream origin = null;
-            FileOutputStream dest = new FileOutputStream(zipFileName);
-            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(
-                    dest));
-            byte data[] = new byte[BUFFER];
-
-            for (int i = 0; i < files.length; i++) {
-                FileInputStream fi = new FileInputStream(files[i]);
-                origin = new BufferedInputStream(fi, BUFFER);
-
-                ZipEntry entry = new ZipEntry(files[i].substring(files[i].lastIndexOf("/") + 1));
-                out.putNextEntry(entry);
-                int count;
-
-                while ((count = origin.read(data, 0, BUFFER)) != -1) {
-                    out.write(data, 0, count);
-                }
-                origin.close();
-            }
-
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void unZipFile(String path, String _targetLocation) {
-        dirChecker(_targetLocation);
-
-        try {
-            FileInputStream fin = new FileInputStream(path);
-            ZipInputStream zin = new ZipInputStream(fin);
-            ZipEntry ze = null;
-            while ((ze = zin.getNextEntry()) != null) {
-
-                //create dir if required while unzipping
-                if (ze.isDirectory()) {
-                    dirChecker(ze.getName());
-                } else {
-                    FileOutputStream fops = new FileOutputStream(_targetLocation + ze.getName());
-                    for (int c = zin.read(); c != -1; c = zin.read()) {
-                        fops.write(c);
-                    }
-
-                    zin.closeEntry();
-                    fops.close();
-                }
-
-            }
-            zin.close();
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-
-    private void dirChecker(String dir) {
-        File f = new File(dir);
-        if (!f.isDirectory()) {
-            f.mkdirs();
-        }
-    }
+//    private void getListPathToZip(String path) {
+//        File src = new File(path);
+//
+//        String files[] = src.list();
+//
+//        int filesLength = files.length;
+//        for (int i = 0; i < filesLength; i++) {
+//            files[i] = path + "/" + files[i];
+//        }
+//        for (int i = 0; i < filesLength; i++) {
+//            File f = new File(files[i]);
+//            if (f.isDirectory()) {
+//                getListPathToZip(files[i]);
+//            } else {
+//                arrayListZip.add(files[i]);
+//            }
+//        }
+//    }
+//
+//    public static void zipFile(String[] files, String zipFileName) {
+//        try {
+//            BufferedInputStream origin = null;
+//            FileOutputStream dest = new FileOutputStream(zipFileName);
+//            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(
+//                    dest));
+//            byte data[] = new byte[BUFFER];
+//
+//            for (int i = 0; i < files.length; i++) {
+//                FileInputStream fi = new FileInputStream(files[i]);
+//                origin = new BufferedInputStream(fi, BUFFER);
+//
+//                ZipEntry entry = new ZipEntry(files[i].substring(files[i].lastIndexOf("/") + 1));
+//                out.putNextEntry(entry);
+//                int count;
+//
+//                while ((count = origin.read(data, 0, BUFFER)) != -1) {
+//                    out.write(data, 0, count);
+//                }
+//                origin.close();
+//            }
+//            out.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public static boolean extractFileZip(Context context, String pathFileZip, String pathFolderSave) {
+//        File zipFile = new File(pathFileZip);
+//        File targetDirectory = new File(pathFolderSave);
+//        targetDirectory.mkdirs();
+//        ZipInputStream zis;
+//        try {
+//            zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
+//            ZipEntry ze;
+//            int count;
+//            byte[] buffer = new byte[8192];
+//            while ((ze = zis.getNextEntry()) != null) {
+//                File file = new File(targetDirectory, ze.getName());
+//                File dir = ze.isDirectory() ? file : file.getParentFile();
+//                if (!dir.isDirectory() && !dir.mkdirs())
+//                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
+//                if (ze.isDirectory())
+//                    continue;
+//                FileOutputStream fout = new FileOutputStream(file);
+//                try {
+//                    while ((count = zis.read(buffer)) != -1)
+//                        fout.write(buffer, 0, count);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    fout.close();
+//                }
+//                scanFile(context, file.getPath(), false);
+//            }
+//            Log.e("extractFileZip", "COMPLETE");
+//            zis.close();
+//            //  deleteRecursive(new File(pathFileZip));
+//        } catch (Exception e) {
+//            //  deleteRecursive(new File(pathFileZip));
+//            e.printStackTrace();
+//            Log.e("extractFileZip", "EROR");
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    public static void scanFile(final Context context, String pathFile, final boolean isPushNotify) {
+//        try {
+//            MediaScannerConnection.scanFile(context, new String[]{pathFile}, null, new MediaScannerConnection.OnScanCompletedListener() {
+//                public void onScanCompleted(String path, Uri uri) {
+//                }
+//            });
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
@@ -634,58 +678,5 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         }
     }
-
-    public boolean extractFileZip(Context context, String pathFileZip, String pathFolderSave) {
-        File zipFile = new File(pathFileZip);
-        File targetDirectory = new File(pathFolderSave);
-        targetDirectory.mkdirs();
-        ZipInputStream zis;
-        try {
-            zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
-            ZipEntry ze;
-            int count;
-            byte[] buffer = new byte[8192];
-            while ((ze = zis.getNextEntry()) != null) {
-                File file = new File(targetDirectory, ze.getName());
-                File dir = ze.isDirectory() ? file : file.getParentFile();
-                if (!dir.isDirectory() && !dir.mkdirs())
-                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
-                if (ze.isDirectory())
-                    continue;
-                FileOutputStream fout = new FileOutputStream(file);
-                try {
-                    while ((count = zis.read(buffer)) != -1)
-                        fout.write(buffer, 0, count);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    fout.close();
-                }
-                scanFile(context, file.getPath(), false);
-            }
-            Log.e("extractFileZip", "COMPLETE");
-            zis.close();
-          //  deleteRecursive(new File(pathFileZip));
-        } catch (Exception e) {
-          //  deleteRecursive(new File(pathFileZip));
-            e.printStackTrace();
-            Log.e("extractFileZip", "EROR");
-            return false;
-        }
-        return true;
-    }
-
-    public static void scanFile(final Context context, String pathFile, final boolean isPushNotify) {
-        try {
-            MediaScannerConnection.scanFile(context, new String[]{pathFile}, null, new MediaScannerConnection.OnScanCompletedListener() {
-                public void onScanCompleted(String path, Uri uri) {
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
 }
 
