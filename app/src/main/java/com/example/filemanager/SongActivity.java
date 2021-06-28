@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -120,7 +121,15 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 long currentImage = songCursor.getLong(songImage);
                 String currentDisplay = songCursor.getString(songDisplay);
 
-                arrayList.add(new Song(currentImage, currentName, currentArtist, currentPath, currentSize, currentDate, currentDuration, currentDisplay));
+                arrayList.add(new Song(currentImage,
+                        currentName,
+                        currentArtist,
+                        currentPath,
+                        currentSize,
+                        currentDate,
+                        currentDuration,
+                        currentDisplay));
+               // Log.d("HieuNV", "" + currentName);
             } while (songCursor.moveToNext());
         }
     }

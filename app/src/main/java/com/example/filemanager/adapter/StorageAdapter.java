@@ -114,19 +114,18 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
 
 
 
-
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-//                if (folder.isSelected()) {
-//                    holder.img_folder.setBackgroundColor(Color.CYAN);
-//                } else {
-//                    holder.img_folder.setBackgroundColor(Color.WHITE);
-//                }
-//
-//
-//                holder.ln_test.setBackgroundColor(folder.isSelected()? Color.CYAN : Color.WHITE);
+                if (folder.isSelected()) {
+                    holder.img_folder.setBackgroundColor(Color.CYAN);
+                } else {
+                    holder.img_folder.setBackgroundColor(Color.WHITE);
+                }
+
+                holder.ln_test.setBackgroundColor(folder.isSelected()? Color.CYAN : Color.WHITE);
+
                 callback.onClick(position);
             }
         });

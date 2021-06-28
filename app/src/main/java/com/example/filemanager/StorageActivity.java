@@ -34,6 +34,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
@@ -50,7 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.ZipFile;
 
-public class StorageActivity extends AppCompatActivity implements OnItemClickListener {
+public class StorageActivity extends AppCompatActivity implements OnItemClickListener, CallBackZipListener {
     private static final int RENAME_REQUEST_CODE = 1000;
     private static final int DELETE_REQUEST_CODE = 2000;
     private static Uri extStorageUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
@@ -73,10 +74,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private EditText edt_rename;
     private TextView emptyView;
     private ArrayList<String> arrayListZip = new ArrayList();
-    private MyAsyncTaskZip myAsyncTaskZip = new MyAsyncTaskZip();
     private MyAsyncTaskUnZip myAsyncTaskUnZip = new MyAsyncTaskUnZip();
-    private ZipManager zipManager = new ZipManager();
-    private ProgressDialog progressDialog;
+    private ZipManager zipManager;
+
     private TextView tv_name_storage;
     private TextView tv_path_storage;
     private TextView tv_size_storage;
@@ -88,6 +88,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_storage);
+        zipManager = new ZipManager(this, this);
         initView();
         setDataAdapter();
     }
@@ -325,19 +326,14 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         }
                         break;
                     case 5: // zip
-                        //showProgressDialog();
-                        myAsyncTaskZip.execute();
-                        repaintUI(listPaths.get(listPaths.size() - 1));
+                        zipManager.zipFile(folderTmp);
                         break;
                     case 6: // unZip
                         myAsyncTaskUnZip.execute();
                         repaintUI(listPaths.get(listPaths.size() - 1));
                         break;
                     case 7:
-                       // folderTmp.setSelected(!folderTmp.isSelected());
-                        break;
-                    case 8:
-                        showCompressingProgressDialog();
+                        // folderTmp.setSelected(!folderTmp.isSelected());
                         break;
                 }
             }
@@ -345,60 +341,16 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         myBuilder.create().show();
     }
 
-    private void showCompressingProgressDialog() {
-        File file = new File(folderTmp.getPathFolder());
-
-        progressDialog = new ProgressDialog(this);
-
-        //progressDialog.setMax(Formatter.formatShortFileSize(progressDialog.getContext(), getFolderSize(file)));
-        progressDialog.setMax((int) getFolderSize(file));
-
-
-
-        progressDialog.setMessage("Compressing");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.show();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (progressDialog.getProgress() <= progressDialog.getMax()) {
-                        Thread.sleep(150);
-                        handler.sendMessage(handler.obtainMessage());
-                        if (progressDialog.getProgress() == progressDialog.getMax()) {
-                            progressDialog.dismiss();
-                        }
-                    }
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    @Override
+    public void OnZipComplete() {
+        repaintUI(listPaths.get(listPaths.size() - 1));
     }
 
-    @SuppressLint("HandlerLeak")
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            progressDialog.incrementProgressBy(1);
-        }
-    };
-
-    private class MyAsyncTaskZip extends AsyncTask {
-        @Override
-        protected Object doInBackground(Object[] objects) {
-            arrayListZip.clear();
-            getListPathToZip(folderTmp.getPathFolder());
-            String[] arr = new String[arrayListZip.size()];
-            arrayListZip.toArray(arr);
-            zipManager.zipFile(arr, folderTmp.getPathFolder() + ".zip");
-
-            return null;
-        }
-
+    @Override
+    public void OnUnZipComplete() {
+        repaintUI(listPaths.get(listPaths.size() - 1));
     }
+
 
     private class MyAsyncTaskUnZip extends AsyncTask {
         @Override
@@ -409,27 +361,27 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    public void getListPathToZip(String path) {
-        File src = new File(path);
-
-        String files[] = src.list();
-        if (files != null) {
-            if (files.length > 0) {
-                int filesLength = files.length;
-                for (int i = 0; i < filesLength; i++) {
-                    files[i] = path + "/" + files[i];
-                }
-                for (int i = 0; i < filesLength; i++) {
-                    File f = new File(files[i]);
-                    if (f.isDirectory()) {
-                        getListPathToZip(files[i]);
-                    } else {
-                        arrayListZip.add(files[i]);
-                    }
-                }
-            }
-        }
-    }
+//    public void getListPathToZip(String path) {
+//        File src = new File(path);
+//
+//        String files[] = src.list();
+//        if (files != null) {
+//            if (files.length > 0) {
+//                int filesLength = files.length;
+//                for (int i = 0; i < filesLength; i++) {
+//                    files[i] = path + "/" + files[i];
+//                }
+//                for (int i = 0; i < filesLength; i++) {
+//                    File f = new File(files[i]);
+//                    if (f.isDirectory()) {
+//                        getListPathToZip(files[i]);
+//                    } else {
+//                        arrayListZip.add(files[i]);
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
@@ -579,7 +531,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         File file = new File(infoTmp.getPathFolder());
 
         //Size
-        tv_size_storage.setText(Formatter.formatFileSize(dialog.getContext(), getFolderSize(file)));
+        tv_size_storage.setText(Formatter.formatFileSize(dialog.getContext(), zipManager.getFolderSize(file)));
 
         //Type
         if (file.isDirectory()) {
@@ -609,17 +561,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         });
     }
 
-    public long getFolderSize(File f) {
-        long size = 0;
-        if (f.isDirectory()) {
-            for (File file : f.listFiles()) {
-                size += getFolderSize(file);
-            }
-        } else {
-            size = f.length();
-        }
-        return size;
-    }
+
 
     private void renameFolder() {
         final Dialog dialog = new Dialog(this);
