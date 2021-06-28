@@ -14,14 +14,13 @@ public class Folder implements Serializable {
     private String nameFolder;
     private Context context;
     private String pathFolder;
-    private String id;
+    private boolean isSelected = false;
 
     public Folder(Context context, File file, String nameFolder, String pathFolder) {
         this.file = file;
         this.nameFolder = nameFolder;
         this.context = context;
         this.pathFolder = pathFolder;
-        //this.id = id;
     }
 
     public File getFile() {
@@ -56,11 +55,11 @@ public class Folder implements Serializable {
         this.pathFolder = pathFolder;
     }
 
-    public String getId() {
-        return id;
+    public boolean isSelected() {
+        return isSelected;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setSelected(boolean selected) {
+        isSelected = selected;
     }
 }

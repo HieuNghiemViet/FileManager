@@ -28,7 +28,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -428,10 +427,10 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_info_image);
 
-        tv_info_image_cancel = dialog.findViewById(R.id.tv_huy);
-        tv_name = dialog.findViewById(R.id.tv_nameImage);
-        tv_path = dialog.findViewById(R.id.tv_pathImage);
-        tv_size = dialog.findViewById(R.id.tv_sizeImage);
+        tv_info_image_cancel = dialog.findViewById(R.id.tv_cancel_image);
+        tv_name = dialog.findViewById(R.id.tv_name_image_main_storage);
+        tv_path = dialog.findViewById(R.id.tv_path_main_image_storage);
+        tv_size = dialog.findViewById(R.id.tv_size_image_main_storage);
         tv_date = dialog.findViewById(R.id.tv_dayImage);
         tv_resolution = dialog.findViewById(R.id.tv_resolutionImage);
 

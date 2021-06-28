@@ -3,16 +3,20 @@ package com.example.filemanager.adapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.model.Model;
+import com.example.filemanager.ApplicationActivity;
 import com.example.filemanager.R;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
@@ -36,15 +40,18 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
+
         private TextView tv_nameFolder;
         private TextView tv_numberFile;
         private ImageView img_folder;
+        private LinearLayout ln_test;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tv_nameFolder = itemView.findViewById(R.id.name_folder);
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
+            ln_test = itemView.findViewById(R.id.ln_test);
         }
     }
 
@@ -106,9 +113,20 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         }
 
 
+
+
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+//                if (folder.isSelected()) {
+//                    holder.img_folder.setBackgroundColor(Color.CYAN);
+//                } else {
+//                    holder.img_folder.setBackgroundColor(Color.WHITE);
+//                }
+//
+//
+//                holder.ln_test.setBackgroundColor(folder.isSelected()? Color.CYAN : Color.WHITE);
                 callback.onClick(position);
             }
         });
