@@ -333,6 +333,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         zipManager.unZipFile(folderTmp);
                         //   zipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
                         break;
+                    case 7:
+
+                        break;
                 }
             }
         });
@@ -526,7 +529,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
     }
-
 
     private void renameFolder() {
         final Dialog dialog = new Dialog(this);

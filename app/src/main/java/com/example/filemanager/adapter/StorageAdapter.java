@@ -32,6 +32,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private Context context;
     private OnItemClickListener callback;
     private static final int VIEW_TYPE_EMPTY = 2;
+    private boolean isSelected = false;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -54,6 +55,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             img_folder = itemView.findViewById(R.id.img_folder);
             ln_test = itemView.findViewById(R.id.ln_test);
             img_more = itemView.findViewById(R.id.img_more);
+
+
         }
     }
 
@@ -114,18 +117,11 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             holder.tv_numberFile.setText("empty");
         }
 
-//        if (folder.isSelected()) {
-//            holder.img_folder.setBackgroundColor(Color.CYAN);
-//        } else {
-//            holder.img_folder.setBackgroundColor(Color.WHITE);
-//        }
+
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              //  folder.setSelected(!folder.isSelected());
-                holder.ln_test.setBackgroundColor(folder.isSelected() ? Color.CYAN : Color.WHITE);
-
                 callback.onClick(position);
             }
         });
@@ -137,13 +133,13 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             }
         });
 
-//        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View v) {
-//                callback.onLongClick(position);
-//                return false;
-//            }
-//        });
+        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                callback.onLongClick(position);
+                return false;
+            }
+        });
     }
 
     @Override

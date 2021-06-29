@@ -14,7 +14,7 @@ public class Folder implements Serializable {
     private String nameFolder;
     private Context context;
     private String pathFolder;
-    private boolean isSelected = false;
+    //private boolean isSelected = false;
 
     public Folder(Context context, File file, String nameFolder, String pathFolder) {
         this.file = file;
@@ -55,11 +55,11 @@ public class Folder implements Serializable {
         this.pathFolder = pathFolder;
     }
 
-    public boolean isSelected() {
-        return isSelected;
-    }
-
-    public void setSelected(boolean selected) {
-        isSelected = selected;
-    }
+//    public boolean isSelected() {
+//        return isSelected;
+//    }
+//
+//    public void setSelected(boolean selected) {
+//        isSelected = selected;
+//    }
 }
