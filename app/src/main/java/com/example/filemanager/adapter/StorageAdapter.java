@@ -45,6 +45,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         private TextView tv_numberFile;
         private ImageView img_folder;
         private LinearLayout ln_test;
+        private ImageView img_more;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -52,6 +53,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
             ln_test = itemView.findViewById(R.id.ln_test);
+            img_more = itemView.findViewById(R.id.img_more);
         }
     }
 
@@ -112,31 +114,36 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             holder.tv_numberFile.setText("empty");
         }
 
-
+//        if (folder.isSelected()) {
+//            holder.img_folder.setBackgroundColor(Color.CYAN);
+//        } else {
+//            holder.img_folder.setBackgroundColor(Color.WHITE);
+//        }
 
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (folder.isSelected()) {
-                    holder.img_folder.setBackgroundColor(Color.CYAN);
-                } else {
-                    holder.img_folder.setBackgroundColor(Color.WHITE);
-                }
-
-                holder.ln_test.setBackgroundColor(folder.isSelected()? Color.CYAN : Color.WHITE);
+              //  folder.setSelected(!folder.isSelected());
+                holder.ln_test.setBackgroundColor(folder.isSelected() ? Color.CYAN : Color.WHITE);
 
                 callback.onClick(position);
             }
         });
 
-        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.img_more.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                callback.onLongClick(position);
-                return false;
+            public void onClick(View v) {
+                callback.onClickMore(position);
             }
         });
+
+//        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                callback.onLongClick(position);
+//                return false;
+//            }
+//        });
     }
 
     @Override
@@ -155,6 +162,4 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
         return bitmap;
     }
-
-
 }

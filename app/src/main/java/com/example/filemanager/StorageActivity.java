@@ -5,10 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -18,23 +16,19 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
@@ -49,7 +43,8 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.zip.ZipFile;
+
+import static androidx.core.content.FileProvider.getUriForFile;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener, CallBackZipListener {
     private static final int RENAME_REQUEST_CODE = 1000;
@@ -58,7 +53,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private ArrayList<Folder> arrayList = new ArrayList<>();
     private RecyclerView rcv_storage;
     private StorageAdapter adapter;
-    ArrayList<String> listPaths = new ArrayList<>();
+    public static ArrayList<String> listPaths = new ArrayList<>();
     private Folder folderTmp;
     private Folder copyTmp;
     private Folder infoTmp;
@@ -73,15 +68,13 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_rename_ok;
     private EditText edt_rename;
     private TextView emptyView;
-    private ArrayList<String> arrayListZip = new ArrayList();
-    private MyAsyncTaskUnZip myAsyncTaskUnZip = new MyAsyncTaskUnZip();
     private ZipManager zipManager;
-
     private TextView tv_name_storage;
     private TextView tv_path_storage;
     private TextView tv_size_storage;
     private TextView tv_cancel_storage;
     private TextView tv_type_storage;
+    private ImageView imgMore;
 
 
     @Override
@@ -99,6 +92,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         btn_paste = (Button) findViewById(R.id.btn_paste);
         btn_cancel = (Button) findViewById(R.id.btn_cancel);
         emptyView = (TextView) findViewById(R.id.empty_view);
+        imgMore = (ImageView) findViewById(R.id.img_more);
+
         btn_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -137,6 +132,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
     }
+
 
     public void setDataAdapter() {
         listPaths.clear();
@@ -216,7 +212,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         }
     }
 
-    private void repaintUI(String path) {
+    public void repaintUI(String path) {
         File directory = new File(path);
         File[] files = directory.listFiles(new FileFilter() {
             @Override
@@ -245,11 +241,16 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     @Override
     public void onLongClick(int position) {
+
+    }
+
+    @Override
+    public void onClickMore(int position) {
+        infoTmp = arrayList.get(position);
         folderTmp = arrayList.get(position);
         copyTmp = arrayList.get(position);
-        infoTmp = arrayList.get(position);
         AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Information", "Copy", "Move", "Rename", "Delete", "Zip", "UnZip", "Selections", "TestDialog"};
+        final String[] feature = {"Information", "Copy", "Move", "Rename", "Delete", "Zip", "UnZip", "Selections"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
             @Override
@@ -329,11 +330,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         zipManager.zipFile(folderTmp);
                         break;
                     case 6: // unZip
-                        myAsyncTaskUnZip.execute();
-                        repaintUI(listPaths.get(listPaths.size() - 1));
-                        break;
-                    case 7:
-                        // folderTmp.setSelected(!folderTmp.isSelected());
+                        zipManager.unZipFile(folderTmp);
+                        //   zipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
                         break;
                 }
             }
@@ -350,38 +348,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     public void OnUnZipComplete() {
         repaintUI(listPaths.get(listPaths.size() - 1));
     }
-
-
-    private class MyAsyncTaskUnZip extends AsyncTask {
-        @Override
-        protected Object doInBackground(Object[] objects) {
-            zipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-
-            return null;
-        }
-    }
-
-//    public void getListPathToZip(String path) {
-//        File src = new File(path);
-//
-//        String files[] = src.list();
-//        if (files != null) {
-//            if (files.length > 0) {
-//                int filesLength = files.length;
-//                for (int i = 0; i < filesLength; i++) {
-//                    files[i] = path + "/" + files[i];
-//                }
-//                for (int i = 0; i < filesLength; i++) {
-//                    File f = new File(files[i]);
-//                    if (f.isDirectory()) {
-//                        getListPathToZip(files[i]);
-//                    } else {
-//                        arrayListZip.add(files[i]);
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     public void copyFileOrDirectory(String srcDir, String dstDir) {
         try {
@@ -560,7 +526,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
     }
-
 
 
     private void renameFolder() {

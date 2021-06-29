@@ -106,6 +106,11 @@ public class ApplicationActivity extends AppCompatActivity implements OnItemClic
     }
 
     @Override
+    public void onClickMore(int position) {
+
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == DELETE_REQUEST_CODE) {
