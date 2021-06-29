@@ -330,8 +330,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         zipManager.zipFile(folderTmp);
                         break;
                     case 6: // unZip
-                        zipManager.unZipFile(folderTmp);
-                        //   zipManager.extractFileZip(StorageActivity.this, folderTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+                        zipManager.unZipFile(folderTmp, listPaths.get(listPaths.size() - 1));
                         break;
                     case 7:
 
@@ -339,7 +338,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         });
-        myBuilder.create().show();
+        myBuilder.create().show(); 
     }
 
     @Override

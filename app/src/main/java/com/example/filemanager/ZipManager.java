@@ -33,6 +33,7 @@ public class ZipManager {
     private CallBackZipListener listener;
     private int hCount = 0;
     private boolean continueZipFile = true;
+    private String unzipPath;
 
     public ZipManager(boolean continueZipFile) {
         this.continueZipFile = continueZipFile;
@@ -49,8 +50,9 @@ public class ZipManager {
         new MyAsyncTaskZip().execute();
     }
 
-    public void unZipFile(Folder folderTmp) {
+    public void unZipFile(Folder folderTmp, String desPath) {
         this.folderTmp = folderTmp;
+        this.unzipPath = desPath;
         showExtractProgressDialog();
         new MyAsyncTaskUnZip().execute();
     }
@@ -171,7 +173,7 @@ public class ZipManager {
         protected Void doInBackground(Void... voids) {
 
             File zipFile = new File(folderTmp.getPathFolder());
-            File targetDirectory = new File("/storage/emulated/0/Pictures");
+            File targetDirectory = new File(unzipPath);
 
             targetDirectory.mkdirs();
             ZipInputStream zis;
