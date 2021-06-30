@@ -76,7 +76,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_cancel_storage;
     private TextView tv_type_storage;
     private ImageView imgMore;
-    StorageActivity storageActivity;
 
 
     @Override
@@ -212,7 +211,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         }
-
     }
 
     public void repaintUI(String path) {
@@ -244,7 +242,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     @Override
     public void onLongClick(int position) {
-        Log.d("HieuNV", "Pathsss: " + folderTmp.getSelectsPath());
+
     }
 
     @Override
@@ -307,27 +305,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         renameFolder();
                         break;
                     case 4: // Delete
-                        File fileCheck = new File(folderTmp.getPathFolder());
-                        if (fileCheck.isDirectory() || folderTmp.getPathFolder().toLowerCase().endsWith(".zip")) {
-                            deleteRecursive(fileCheck);
-                            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
-                                    null, new MediaScannerConnection.OnScanCompletedListener() {
-                                        public void onScanCompleted(String path, Uri uri) {
-                                        }
-                                    });
-                            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
-                        } else {
-                            if (!deleteFileStorageUsingPath(StorageActivity.this, folderTmp.getPathFolder())) {
-                                deleteRecursive(fileCheck);
-                            }
-                            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
-                            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{folderTmp.getPathFolder()},
-                                    null, new MediaScannerConnection.OnScanCompletedListener() {
-                                        public void onScanCompleted(String path, Uri uri) {
-                                        }
-                                    });
-                            repaintUI(listPaths.get(listPaths.size() - 1));
+                        for (int i = 0; i< adapter.selectListPath.size(); i++) {
+                            delete(adapter.selectListPath.get(i));
                         }
+                        repaintUI(listPaths.get(listPaths.size() - 1));
                         break;
                     case 5: // zip
                         zipManager.zipFile(folderTmp);
@@ -428,6 +409,30 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             return true;
         } else {
             return false;
+        }
+    }
+
+    public void delete(String path) {
+        File fileCheck = new File(path);
+        if (fileCheck.isDirectory() || path.toLowerCase().endsWith(".zip")) {
+            deleteRecursive(fileCheck);
+            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{path},
+                    null, new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                        }
+                    });
+            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+        } else {
+            if (!deleteFileStorageUsingPath(StorageActivity.this, path)) {
+                deleteRecursive(fileCheck);
+            }
+            Toast.makeText(StorageActivity.this, "Delete Successfully", Toast.LENGTH_LONG).show();
+            MediaScannerConnection.scanFile(StorageActivity.this, new String[]{path},
+                    null, new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                        }
+                    });
+
         }
     }
 

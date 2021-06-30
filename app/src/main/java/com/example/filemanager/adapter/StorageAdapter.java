@@ -31,6 +31,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private Context context;
     private OnItemClickListener callback;
     public ArrayList<String> selectListPath;
+    private Folder mFolder;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -125,6 +126,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 callback.onClickMore(position);
+
             }
         });
 
@@ -141,8 +143,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                     holder.lnl_items.setBackgroundColor(Color.WHITE);
                     selectListPath.remove(folder.getPathFolder());
                 }
-               // Log.d("HieuNV", "listPath: " + selectListPath);
-                new Folder(context, folder.getFile(), folder.getNameFolder(), folder.getPathFolder() , selectListPath);
+                // Log.d("HieuNV", "listPath: " + selectListPath);
                 Log.d("HieuNV", "listPath: " + selectListPath);
                 return false;
             }
