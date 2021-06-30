@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +16,6 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.model.Model;
-import com.example.filemanager.ApplicationActivity;
 import com.example.filemanager.R;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Folder;
@@ -31,32 +30,29 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private ArrayList<Folder> folders;
     private Context context;
     private OnItemClickListener callback;
-    private static final int VIEW_TYPE_EMPTY = 2;
-    private boolean isSelected = false;
+    public ArrayList<String> selectListPath;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
         this.context = context;
         this.callback = callback;
+        this.selectListPath = new ArrayList<>();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-
         private TextView tv_nameFolder;
         private TextView tv_numberFile;
         private ImageView img_folder;
-        private LinearLayout ln_test;
         private ImageView img_more;
+        private LinearLayout lnl_items;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tv_nameFolder = itemView.findViewById(R.id.name_folder);
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
-            ln_test = itemView.findViewById(R.id.ln_test);
             img_more = itemView.findViewById(R.id.img_more);
-
-
+            lnl_items = itemView.findViewById(R.id.lnl_items);
         }
     }
 
@@ -118,7 +114,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         }
 
 
-
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,13 +128,27 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             }
         });
 
-        holder.img_folder.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.lnl_items.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 callback.onLongClick(position);
+
+                folder.setSelected(!folder.isSelected());
+                if (folder.isSelected()) {
+                    holder.lnl_items.setBackgroundColor(Color.CYAN);
+                    selectListPath.add(folder.getPathFolder());
+                } else {
+                    holder.lnl_items.setBackgroundColor(Color.WHITE);
+                    selectListPath.remove(folder.getPathFolder());
+                }
+               // Log.d("HieuNV", "listPath: " + selectListPath);
+                new Folder(context, folder.getFile(), folder.getNameFolder(), folder.getPathFolder() , selectListPath);
+                Log.d("HieuNV", "listPath: " + selectListPath);
                 return false;
             }
         });
+        selectListPath.clear();
+        holder.lnl_items.setBackgroundColor(Color.WHITE);
     }
 
     @Override
@@ -158,4 +167,5 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
         return bitmap;
     }
+
 }

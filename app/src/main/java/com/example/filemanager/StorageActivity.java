@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -75,6 +76,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_cancel_storage;
     private TextView tv_type_storage;
     private ImageView imgMore;
+    StorageActivity storageActivity;
 
 
     @Override
@@ -157,7 +159,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath(), null));
             }
         }
     }
@@ -210,6 +212,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         }
+
     }
 
     public void repaintUI(String path) {
@@ -225,7 +228,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             if (files.length > 0) {
                 Arrays.sort(files, new FileComparator());
                 for (int i = 0; i < files.length; i++) {
-                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
+                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath(), null));
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -241,7 +244,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     @Override
     public void onLongClick(int position) {
-
+        Log.d("HieuNV", "Pathsss: " + folderTmp.getSelectsPath());
     }
 
     @Override
@@ -338,7 +341,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         });
-        myBuilder.create().show(); 
+        myBuilder.create().show();
     }
 
     @Override

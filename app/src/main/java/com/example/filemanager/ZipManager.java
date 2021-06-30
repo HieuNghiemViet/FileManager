@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.format.Formatter;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.filemanager.model.Folder;
@@ -25,7 +27,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ZipManager {
-    private final int BUFFER = 4000;
+    private final int BUFFER = 8192;
     private ArrayList<String> arrayListZip = new ArrayList();
     public Folder folderTmp;
     private Context context;
@@ -35,10 +37,6 @@ public class ZipManager {
     private boolean continueZipFile = true;
     private String unzipPath;
 
-    public ZipManager(boolean continueZipFile) {
-        this.continueZipFile = continueZipFile;
-    }
-
     public ZipManager(Context context, CallBackZipListener listener) {
         this.context = context;
         this.listener = listener;
@@ -46,15 +44,16 @@ public class ZipManager {
 
     public void zipFile(Folder folderTmp) {
         this.folderTmp = folderTmp;
-        showCompressingProgressDialog();
         new MyAsyncTaskZip().execute();
+        showCompressingProgressDialog();
+
     }
 
     public void unZipFile(Folder folderTmp, String desPath) {
         this.folderTmp = folderTmp;
         this.unzipPath = desPath;
-        showExtractProgressDialog();
         new MyAsyncTaskUnZip().execute();
+        showExtractProgressDialog();
     }
 
     private void showExtractProgressDialog() {
@@ -93,13 +92,6 @@ public class ZipManager {
         progressDialog.setMessage("Compressing");
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
-        progressDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                dialog.dismiss();
-            }
-        });
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.show();
     }
@@ -138,9 +130,8 @@ public class ZipManager {
                         }
                         publishProgress(value);
                     }
-
+                    hCount = 0;
                     origin.close();
-
                 }
                 out.close();
             } catch (Exception e) {
@@ -154,13 +145,11 @@ public class ZipManager {
             super.onProgressUpdate(values);
             int number = values[0];
             progressDialog.setProgress(number);
-
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-
             progressDialog.dismiss();
             listener.OnZipComplete();
         }
@@ -190,6 +179,7 @@ public class ZipManager {
                     if (ze.isDirectory())
                         continue;
                     FileOutputStream fout = new FileOutputStream(file);
+
                     try {
                         while ((count = zis.read(buffer)) != -1) {
                             fout.write(buffer, 0, count);
@@ -205,6 +195,7 @@ public class ZipManager {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
+                        hCount = 0;
                         fout.close();
                     }
                     scanFile(context, file.getPath(), false);
@@ -230,58 +221,12 @@ public class ZipManager {
         }
 
         @Override
-        protected void onPostExecute(Void unused) {
-            super.onPostExecute(unused);
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
             progressDialog.dismiss();
             listener.OnUnZipComplete();
-            Toast.makeText(context, "Complete", Toast.LENGTH_LONG).show();
-
         }
     }
-
-
-//    public boolean extractFileZip(Context context, String pathFileZip, String pathFolderSave) {
-//        File zipFile = new File(pathFileZip);
-//        File targetDirectory = new File(pathFolderSave);
-//        targetDirectory.mkdirs();
-//        ZipInputStream zis;
-//        try {
-//            zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
-//            ZipEntry ze;
-//            int count;
-//            byte[] buffer = new byte[8192];
-//            while ((ze = zis.getNextEntry()) != null) {
-//                File file = new File(targetDirectory, ze.getName());
-//                File dir = ze.isDirectory() ? file : file.getParentFile();
-//                if (!dir.isDirectory() && !dir.mkdirs())
-//                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
-//                if (ze.isDirectory())
-//                    continue;
-//                FileOutputStream fout = new FileOutputStream(file);
-//                try {
-//                    while ((count = zis.read(buffer)) != -1)
-//                        fout.write(buffer, 0, count);
-//                    Log.d("HieuNV", "count: " + count);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    fout.close();
-//                }
-//                scanFile(context, file.getPath(), false);
-//            }
-//
-//            Log.e("extractFileZip", "COMPLETE");
-//            zis.close();
-//            //  deleteRecursive(new File(pathFileZip));
-//        } catch (Exception e) {
-//            //  deleteRecursive(new File(pathFileZip));
-//            e.printStackTrace();
-//            Log.e("extractFileZip", "EROR");
-//            return false;
-//        }
-//        return true;
-//    }
-
 
     public void scanFile(final Context context, String pathFile, final boolean isPushNotify) {
         try {

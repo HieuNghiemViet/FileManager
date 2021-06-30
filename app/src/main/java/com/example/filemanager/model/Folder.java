@@ -7,6 +7,7 @@ import android.provider.MediaStore;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Folder implements Serializable {
@@ -14,13 +15,15 @@ public class Folder implements Serializable {
     private String nameFolder;
     private Context context;
     private String pathFolder;
-    //private boolean isSelected = false;
+    private boolean isSelected = false;
+    private ArrayList<String> selectsPath;
 
-    public Folder(Context context, File file, String nameFolder, String pathFolder) {
+    public Folder(Context context, File file, String nameFolder, String pathFolder, ArrayList<String> selectsPath) {
         this.file = file;
         this.nameFolder = nameFolder;
         this.context = context;
         this.pathFolder = pathFolder;
+        this.selectsPath = selectsPath;
     }
 
     public File getFile() {
@@ -55,11 +58,19 @@ public class Folder implements Serializable {
         this.pathFolder = pathFolder;
     }
 
-//    public boolean isSelected() {
-//        return isSelected;
-//    }
-//
-//    public void setSelected(boolean selected) {
-//        isSelected = selected;
-//    }
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+
+    public ArrayList<String> getSelectsPath() {
+        return selectsPath;
+    }
+
+    public void setSelectsPath(ArrayList<String> selectsPath) {
+        this.selectsPath = selectsPath;
+    }
 }
