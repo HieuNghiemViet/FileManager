@@ -270,6 +270,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(View v) {
                 showInfo(Gravity.CENTER, infoTmp);
                 lnl_menu.setVisibility(View.INVISIBLE);
+                adapter.changeBackGround(false);
                 adapter.selectListPath.clear();
             }
         });

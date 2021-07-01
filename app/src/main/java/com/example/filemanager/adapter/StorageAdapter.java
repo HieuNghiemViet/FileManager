@@ -31,7 +31,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private Context context;
     private OnItemClickListener callback;
     public ArrayList<String> selectListPath;
-    private boolean stateView = true;
+    private boolean stateView = false;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -120,31 +120,49 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             }
         });
 
+        holder.lnl_items.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("HieuNV","onClick called!");
+                if (stateView) {
+                    folder.setSelected(!folder.isSelected());
+
+                    if (folder.isSelected()) {
+                        holder.lnl_items.setBackgroundColor(Color.CYAN);
+                        selectListPath.add(folder.getPathFolder());
+                    } else {
+                        holder.lnl_items.setBackgroundColor(Color.WHITE);
+                        selectListPath.remove(folder.getPathFolder());
+                    }
+                }
+                callback.onLongClick(position);
+                if(selectListPath.size() == 0){
+                    stateView = false;
+                }
+            }
+        });
+
         holder.lnl_items.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-//                if (stateView) {
-//
-//                } else {
-//                    holder.lnl_items.setBackgroundColor(Color.WHITE);
-//                    selectListPath.remove(folder.getPathFolder());
-//
-//                }
+                Log.d("HieuNV","OnLongClick called!");
+                if (!stateView) {
+                    folder.setSelected(!folder.isSelected());
 
-
-
-                folder.setSelected(!folder.isSelected());
-
-                if (folder.isSelected()) {
-                    holder.lnl_items.setBackgroundColor(Color.CYAN);
-                    selectListPath.add(folder.getPathFolder());
-                } else {
-                    holder.lnl_items.setBackgroundColor(Color.WHITE);
-                    selectListPath.remove(folder.getPathFolder());
+                    if (folder.isSelected()) {
+                        holder.lnl_items.setBackgroundColor(Color.CYAN);
+                        selectListPath.add(folder.getPathFolder());
+                    } else {
+                        holder.lnl_items.setBackgroundColor(Color.WHITE);
+                        selectListPath.remove(folder.getPathFolder());
+                    }
                 }
-
+                stateView = true;
+                if(selectListPath.size() == 0){
+                    stateView = false;
+                }
                 callback.onLongClick(position);
-                return false;
+                return true;
             }
         });
         holder.lnl_items.setBackgroundColor(Color.WHITE);
@@ -165,5 +183,12 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         mdr.release();
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
         return bitmap;
+    }
+
+    public void changeBackGround(boolean isSelect) {
+        for (int i = 0; i < folders.size(); i++) {
+            folders.get(i).setSelected(isSelect);
+            notifyItemChanged(i);
+        }
     }
 }
