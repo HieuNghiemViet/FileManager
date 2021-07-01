@@ -165,10 +165,6 @@ public class ImageActivity extends AppCompatActivity implements OnItemClickListe
         myBuilder.create().show();
     }
 
-    @Override
-    public void onClickMore(int position) {
-
-    }
 
     private void renameImage(int gravity, Image image) {
         final Dialog dialog = new Dialog(this);

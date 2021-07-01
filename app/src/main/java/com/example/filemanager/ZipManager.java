@@ -13,6 +13,7 @@ import android.view.GestureDetector;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.filemanager.adapter.StorageAdapter;
 import com.example.filemanager.model.Folder;
 
 import java.io.BufferedInputStream;
@@ -36,6 +37,8 @@ public class ZipManager {
     private int hCount = 0;
     private boolean continueZipFile = true;
     private String unzipPath;
+    private StorageAdapter adapter;
+    private String path;
 
     public ZipManager(Context context, CallBackZipListener listener) {
         this.context = context;
@@ -46,7 +49,6 @@ public class ZipManager {
         this.folderTmp = folderTmp;
         new MyAsyncTaskZip().execute();
         showCompressingProgressDialog();
-
     }
 
     public void unZipFile(Folder folderTmp, String desPath) {
@@ -101,6 +103,7 @@ public class ZipManager {
         @Override
         protected Void doInBackground(Void... voids) {
             arrayListZip.clear();
+
             getListPathToZip(folderTmp.getPathFolder());
             String[] files = new String[arrayListZip.size()];
             arrayListZip.toArray(files);

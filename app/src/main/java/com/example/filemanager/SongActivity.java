@@ -172,10 +172,6 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         myBuilder.create().show();
     }
 
-    @Override
-    public void onClickMore(int position) {
-
-    }
 
     private void renameSong(int gravity, Song song) {
         final Dialog dialog = new Dialog(this);

@@ -1,6 +1,5 @@
 package com.example.filemanager;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -9,7 +8,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -20,7 +18,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -28,6 +25,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,7 +43,6 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static androidx.core.content.FileProvider.getUriForFile;
 
 public class StorageActivity extends AppCompatActivity implements OnItemClickListener, CallBackZipListener {
     private static final int RENAME_REQUEST_CODE = 1000;
@@ -75,8 +72,14 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private TextView tv_size_storage;
     private TextView tv_cancel_storage;
     private TextView tv_type_storage;
-    private ImageView imgMore;
-
+    private LinearLayout lnl_menu;
+    private ImageView img_info;
+    private ImageView img_copy;
+    private ImageView img_move;
+    private ImageView img_delete;
+    private ImageView img_rename;
+    private ImageView img_zip;
+    private ImageView img_unzip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +96,15 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         btn_paste = (Button) findViewById(R.id.btn_paste);
         btn_cancel = (Button) findViewById(R.id.btn_cancel);
         emptyView = (TextView) findViewById(R.id.empty_view);
-        imgMore = (ImageView) findViewById(R.id.img_more);
+        lnl_menu = (LinearLayout) findViewById(R.id.lnl_menu);
+
+        img_info = (ImageView) findViewById(R.id.img_info);
+        img_copy = (ImageView) findViewById(R.id.img_copy);
+        img_move = (ImageView) findViewById(R.id.img_move);
+        img_delete = (ImageView) findViewById(R.id.img_delete);
+        img_rename = (ImageView) findViewById(R.id.img_rename);
+        img_zip = (ImageView) findViewById(R.id.img_zip);
+        img_unzip = (ImageView) findViewById(R.id.img_unzip);
 
         btn_add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,6 +121,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 if (window == null) {
                     return;
                 }
+
                 window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
                 window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
 
@@ -133,7 +145,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
     }
-
 
     public void setDataAdapter() {
         listPaths.clear();
@@ -242,88 +253,128 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
     @Override
     public void onLongClick(int position) {
-
-    }
-
-    @Override
-    public void onClickMore(int position) {
         infoTmp = arrayList.get(position);
         folderTmp = arrayList.get(position);
         copyTmp = arrayList.get(position);
-        AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
-        final String[] feature = {"Information", "Copy", "Move", "Rename", "Delete", "Zip", "UnZip", "Selections"};
 
-        myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
+        if (adapter.selectListPath.size() > 0) {
+            lnl_menu.setVisibility(View.VISIBLE);
+            btn_add.setVisibility(View.INVISIBLE);
+        } else {
+            lnl_menu.setVisibility(View.INVISIBLE);
+            btn_add.setVisibility(View.VISIBLE);
+        }
+
+        img_info.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int position) {
-                switch (position) {
-                    case 0: // show Info
-                        showInfo(Gravity.CENTER, infoTmp);
-                        break;
-                    case 1: // copy
-                        btn_paste.setVisibility(View.VISIBLE);
-                        btn_paste.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                copyFileOrDirectory(copyTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-                                repaintUI(listPaths.get(listPaths.size() - 1));
-                                Toast.makeText(StorageActivity.this, "Successfully", Toast.LENGTH_LONG).show();
-                                btn_paste.setVisibility(View.INVISIBLE);
-                                btn_cancel.setVisibility(View.INVISIBLE);
-                            }
-                        });
-                        btn_cancel.setVisibility(View.VISIBLE);
-                        btn_cancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                btn_paste.setVisibility(View.INVISIBLE);
-                                btn_cancel.setVisibility(View.INVISIBLE);
-                            }
-                        });
-                        break;
-                    case 2: // Move
-                        btn_paste.setVisibility(View.VISIBLE);
-                        btn_paste.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                cutFolder(copyTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
-                                Toast.makeText(StorageActivity.this, "Move Successfully", Toast.LENGTH_LONG).show();
-                                btn_paste.setVisibility(View.INVISIBLE);
-                                btn_cancel.setVisibility(View.INVISIBLE);
-                            }
-                        });
-                        btn_cancel.setVisibility(View.VISIBLE);
-                        btn_cancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                btn_paste.setVisibility(View.INVISIBLE);
-                                btn_cancel.setVisibility(View.INVISIBLE);
-                            }
-                        });
-                        break;
-                    case 3: // Rename
-                        renameFolder();
-                        break;
-                    case 4: // Delete
-                        for (int i = 0; i< adapter.selectListPath.size(); i++) {
-                            delete(adapter.selectListPath.get(i));
-                        }
-                        repaintUI(listPaths.get(listPaths.size() - 1));
-                        break;
-                    case 5: // zip
-                        zipManager.zipFile(folderTmp);
-                        break;
-                    case 6: // unZip
-                        zipManager.unZipFile(folderTmp, listPaths.get(listPaths.size() - 1));
-                        break;
-                    case 7:
-
-                        break;
-                }
+            public void onClick(View v) {
+                showInfo(Gravity.CENTER, infoTmp);
+                lnl_menu.setVisibility(View.INVISIBLE);
+                adapter.selectListPath.clear();
             }
         });
-        myBuilder.create().show();
+
+        img_copy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btn_paste.setVisibility(View.VISIBLE);
+                btn_paste.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        for (int i = 0; i < adapter.selectListPath.size(); i++) {
+                            copyFileOrDirectory(adapter.selectListPath.get(i), listPaths.get(listPaths.size() - 1));
+                        }
+                        adapter.selectListPath.clear();
+                        repaintUI(listPaths.get(listPaths.size() - 1));
+                        Toast.makeText(StorageActivity.this, "Successfully", Toast.LENGTH_LONG).show();
+                        btn_paste.setVisibility(View.INVISIBLE);
+                        btn_cancel.setVisibility(View.INVISIBLE);
+                    }
+                });
+                btn_cancel.setVisibility(View.VISIBLE);
+                btn_cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        btn_paste.setVisibility(View.INVISIBLE);
+                        btn_cancel.setVisibility(View.INVISIBLE);
+                    }
+                });
+                lnl_menu.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        img_move.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btn_paste.setVisibility(View.VISIBLE);
+                btn_paste.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //cutFolder(copyTmp.getPathFolder(), listPaths.get(listPaths.size() - 1));
+                        for (int i = 0; i < adapter.selectListPath.size(); i++) {
+                            cutFolder(adapter.selectListPath.get(i), listPaths.get(listPaths.size() - 1));
+                        }
+                        adapter.selectListPath.clear();
+                        Toast.makeText(StorageActivity.this, "Move Successfully", Toast.LENGTH_LONG).show();
+                        btn_paste.setVisibility(View.INVISIBLE);
+                        btn_cancel.setVisibility(View.INVISIBLE);
+                    }
+                });
+                btn_cancel.setVisibility(View.VISIBLE);
+                btn_cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        btn_paste.setVisibility(View.INVISIBLE);
+                        btn_cancel.setVisibility(View.INVISIBLE);
+                    }
+                });
+                lnl_menu.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        img_delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 0; i < adapter.selectListPath.size(); i++) {
+                    delete(adapter.selectListPath.get(i));
+                }
+                lnl_menu.setVisibility(View.INVISIBLE);
+                adapter.selectListPath.clear();
+                repaintUI(listPaths.get(listPaths.size() - 1));
+            }
+        });
+
+        img_rename.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                renameFolder();
+                adapter.selectListPath.clear();
+                lnl_menu.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        img_zip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 0; i < adapter.selectListPath.size(); i++) {
+                    zipManager.zipFile(folderTmp);
+                }
+
+                adapter.selectListPath.clear();
+                lnl_menu.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        img_unzip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                zipManager.unZipFile(folderTmp, listPaths.get(listPaths.size() - 1));
+                adapter.selectListPath.clear();
+                lnl_menu.setVisibility(View.INVISIBLE);
+            }
+        });
     }
+
 
     @Override
     public void OnZipComplete() {
@@ -432,7 +483,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         public void onScanCompleted(String path, Uri uri) {
                         }
                     });
-
         }
     }
 
@@ -547,7 +597,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         edt_rename = dialog.findViewById(R.id.edt_rename);
         edt_rename.setText(folderTmp.getNameFolder());
 
-
         Window window = dialog.getWindow();
         if (window == null) {
             return;
@@ -610,6 +659,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             }
         });
         listPaths.remove(listPaths.size() - 1);
+        lnl_menu.setVisibility(View.INVISIBLE);
         repaintUI(directory.getAbsolutePath());
     }
 

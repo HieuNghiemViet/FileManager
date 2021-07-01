@@ -31,7 +31,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private Context context;
     private OnItemClickListener callback;
     public ArrayList<String> selectListPath;
-    private Folder mFolder;
+    private boolean stateView = true;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -40,19 +40,18 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         this.selectListPath = new ArrayList<>();
     }
 
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tv_nameFolder;
         private TextView tv_numberFile;
         private ImageView img_folder;
-        private ImageView img_more;
-        private LinearLayout lnl_items;
+        public LinearLayout lnl_items;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tv_nameFolder = itemView.findViewById(R.id.name_folder);
             tv_numberFile = itemView.findViewById(R.id.number_files);
             img_folder = itemView.findViewById(R.id.img_folder);
-            img_more = itemView.findViewById(R.id.img_more);
             lnl_items = itemView.findViewById(R.id.lnl_items);
         }
     }
@@ -114,7 +113,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             holder.tv_numberFile.setText("empty");
         }
 
-
         holder.img_folder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -122,20 +120,21 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             }
         });
 
-        holder.img_more.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                callback.onClickMore(position);
-
-            }
-        });
-
         holder.lnl_items.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                callback.onLongClick(position);
+//                if (stateView) {
+//
+//                } else {
+//                    holder.lnl_items.setBackgroundColor(Color.WHITE);
+//                    selectListPath.remove(folder.getPathFolder());
+//
+//                }
+
+
 
                 folder.setSelected(!folder.isSelected());
+
                 if (folder.isSelected()) {
                     holder.lnl_items.setBackgroundColor(Color.CYAN);
                     selectListPath.add(folder.getPathFolder());
@@ -143,12 +142,11 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                     holder.lnl_items.setBackgroundColor(Color.WHITE);
                     selectListPath.remove(folder.getPathFolder());
                 }
-                // Log.d("HieuNV", "listPath: " + selectListPath);
-                Log.d("HieuNV", "listPath: " + selectListPath);
+
+                callback.onLongClick(position);
                 return false;
             }
         });
-        selectListPath.clear();
         holder.lnl_items.setBackgroundColor(Color.WHITE);
     }
 
@@ -168,5 +166,4 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
         return bitmap;
     }
-
 }

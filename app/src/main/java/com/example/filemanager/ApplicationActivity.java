@@ -105,10 +105,6 @@ public class ApplicationActivity extends AppCompatActivity implements OnItemClic
     public void onLongClick(int position) {
     }
 
-    @Override
-    public void onClickMore(int position) {
-
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

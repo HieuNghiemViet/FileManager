@@ -17,7 +17,7 @@
 
     <LinearLayout
         android:id="@+id/ln_test"
-        android:layout_width="270dp"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
@@ -41,12 +41,6 @@
             android:text="10 Files"
             android:textSize="20sp" />
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/img_more"
-        android:layout_width="30dp"
-        android:layout_height="match_parent"
-        android:src="@drawable/ic_more"/>
 
 
 </LinearLayout>

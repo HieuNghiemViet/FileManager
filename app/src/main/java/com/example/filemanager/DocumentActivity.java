@@ -115,8 +115,4 @@ public class DocumentActivity extends AppCompatActivity implements OnItemClickLi
     public void onLongClick(int position) {
     }
 
-    @Override
-    public void onClickMore(int position) {
-
-    }
 }

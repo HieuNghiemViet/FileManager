@@ -157,10 +157,6 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         myBuilder.create().show();
     }
 
-    @Override
-    public void onClickMore(int position) {
-
-    }
 
     private void shareVideo(Video video) {
         File videoFile = new File(video.getPathVideo());
