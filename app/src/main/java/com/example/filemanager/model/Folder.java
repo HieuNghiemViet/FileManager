@@ -16,14 +16,12 @@ public class Folder implements Serializable {
     private Context context;
     private String pathFolder;
     private boolean isSelected = false;
-    private ArrayList<String> selectsPath;
 
-    public Folder(Context context, File file, String nameFolder, String pathFolder, ArrayList<String> selectsPath) {
+    public Folder(Context context, File file, String nameFolder, String pathFolder) {
         this.file = file;
         this.nameFolder = nameFolder;
         this.context = context;
         this.pathFolder = pathFolder;
-        this.selectsPath = selectsPath;
     }
 
     public File getFile() {
@@ -66,11 +64,4 @@ public class Folder implements Serializable {
         isSelected = selected;
     }
 
-    public ArrayList<String> getSelectsPath() {
-        return selectsPath;
-    }
-
-    public void setSelectsPath(ArrayList<String> selectsPath) {
-        this.selectsPath = selectsPath;
-    }
 }

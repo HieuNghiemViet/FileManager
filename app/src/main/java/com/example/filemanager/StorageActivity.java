@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -67,6 +68,9 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
     private EditText edt_rename;
     private TextView emptyView;
     private ZipManager zipManager;
+    public EditText edt_create_name_folder_zip;
+    private TextView tv_create_folder_zip_cancel;
+    private TextView tv_create_folder_zip_ok;
     private TextView tv_name_storage;
     private TextView tv_path_storage;
     private TextView tv_size_storage;
@@ -169,7 +173,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (files != null) {
             Arrays.sort(files, new FileComparator());
             for (int i = 0; i < files.length; i++) {
-                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath(), null));
+                arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
             }
         }
     }
@@ -237,7 +241,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             if (files.length > 0) {
                 Arrays.sort(files, new FileComparator());
                 for (int i = 0; i < files.length; i++) {
-                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath(), null));
+                    arrayList.add(new Folder(StorageActivity.this, files[i], files[i].getName(), files[i].getAbsolutePath()));
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -270,7 +274,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             public void onClick(View v) {
                 showInfo(Gravity.CENTER, infoTmp);
                 lnl_menu.setVisibility(View.INVISIBLE);
-                adapter.changeBackGround(false);
+                adapter.changeBackGroundItems(false);
                 adapter.selectListPath.clear();
             }
         });
@@ -279,6 +283,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             @Override
             public void onClick(View v) {
                 btn_paste.setVisibility(View.VISIBLE);
+                adapter.changeBackGroundItems(false);
                 btn_paste.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -297,6 +302,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     @Override
                     public void onClick(View v) {
                         btn_paste.setVisibility(View.INVISIBLE);
+                        adapter.changeBackGroundItems(false);
                         btn_cancel.setVisibility(View.INVISIBLE);
                     }
                 });
@@ -308,6 +314,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             @Override
             public void onClick(View v) {
                 btn_paste.setVisibility(View.VISIBLE);
+                adapter.changeBackGroundItems(false);
                 btn_paste.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -327,6 +334,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                     public void onClick(View v) {
                         btn_paste.setVisibility(View.INVISIBLE);
                         btn_cancel.setVisibility(View.INVISIBLE);
+                        adapter.changeBackGroundItems(false);
                     }
                 });
                 lnl_menu.setVisibility(View.INVISIBLE);
@@ -341,6 +349,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
                 lnl_menu.setVisibility(View.INVISIBLE);
                 adapter.selectListPath.clear();
+                adapter.changeBackGroundItems(false);
                 repaintUI(listPaths.get(listPaths.size() - 1));
             }
         });
@@ -349,6 +358,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
             @Override
             public void onClick(View v) {
                 renameFolder();
+                adapter.changeBackGroundItems(false);
                 adapter.selectListPath.clear();
                 lnl_menu.setVisibility(View.INVISIBLE);
             }
@@ -357,12 +367,66 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         img_zip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for (int i = 0; i < adapter.selectListPath.size(); i++) {
-                    zipManager.zipFile(folderTmp);
+                // dialog create folder zip
+                final Dialog dialog = new Dialog(StorageActivity.this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.layout_dialog_create_folder_zip);
+
+                tv_create_folder_zip_cancel = dialog.findViewById(R.id.tv_create_folder_zip_cancel);
+                tv_create_folder_zip_ok = dialog.findViewById(R.id.tv_create_folder_zip_ok);
+                edt_create_name_folder_zip = dialog.findViewById(R.id.edt_create_name_folder_zip);
+                edt_create_name_folder_zip.setText(folderTmp.getNameFolder());
+
+                Window window = dialog.getWindow();
+                if (window == null) {
+                    return;
                 }
 
-                adapter.selectListPath.clear();
-                lnl_menu.setVisibility(View.INVISIBLE);
+                window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+                window.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+                WindowManager.LayoutParams windowAttributes = window.getAttributes();
+                window.setAttributes(windowAttributes);
+                dialog.show();
+
+                tv_create_folder_zip_ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        folderName = edt_create_name_folder_zip.getText().toString().trim();
+                        if (isEmptyString(folderName)) {
+                            Toast.makeText(StorageActivity.this, "Name Must Not Be Left Blank", Toast.LENGTH_LONG).show();
+                        } else {
+                            //FIX logic
+                            File file = new File(listPaths.get(listPaths.size() - 1), folderName);
+                            if (!file.exists()) {
+                                if (file.mkdir()) {
+                                    for (int i = 0; i < adapter.selectListPath.size(); i++) {
+                                        copyFileOrDirectory(adapter.selectListPath.get(i), file.getAbsolutePath());
+
+                                    }
+                                }
+                            }
+
+                            zipManager.zipFile(new Folder(StorageActivity.this, file.getAbsoluteFile(), file.getName(), file.getAbsolutePath()));
+
+                            adapter.changeBackGroundItems(false);
+                            lnl_menu.setVisibility(View.INVISIBLE);
+                            adapter.selectListPath.clear();
+                            //delete(file.getAbsolutePath());
+                            Log.d("HieuNV", "file.getAbsolutePath(): " + file.getAbsolutePath());
+                            dialog.dismiss();
+                        }
+                    }
+                });
+
+                tv_create_folder_zip_cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        adapter.selectListPath.clear();
+                        adapter.changeBackGroundItems(false);
+                        dialog.dismiss();
+                    }
+                });
             }
         });
 

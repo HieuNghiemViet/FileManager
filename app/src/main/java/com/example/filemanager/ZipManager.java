@@ -37,8 +37,7 @@ public class ZipManager {
     private int hCount = 0;
     private boolean continueZipFile = true;
     private String unzipPath;
-    private StorageAdapter adapter;
-    private String path;
+    private StorageActivity storageActivity;
 
     public ZipManager(Context context, CallBackZipListener listener) {
         this.context = context;
@@ -50,6 +49,7 @@ public class ZipManager {
         new MyAsyncTaskZip().execute();
         showCompressingProgressDialog();
     }
+
 
     public void unZipFile(Folder folderTmp, String desPath) {
         this.folderTmp = folderTmp;

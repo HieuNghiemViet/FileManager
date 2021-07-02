@@ -123,7 +123,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         holder.lnl_items.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("HieuNV","onClick called!");
                 if (stateView) {
                     folder.setSelected(!folder.isSelected());
 
@@ -140,21 +139,18 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                     stateView = false;
                 }
             }
+
         });
 
         holder.lnl_items.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Log.d("HieuNV","OnLongClick called!");
                 if (!stateView) {
                     folder.setSelected(!folder.isSelected());
 
                     if (folder.isSelected()) {
                         holder.lnl_items.setBackgroundColor(Color.CYAN);
                         selectListPath.add(folder.getPathFolder());
-                    } else {
-                        holder.lnl_items.setBackgroundColor(Color.WHITE);
-                        selectListPath.remove(folder.getPathFolder());
                     }
                 }
                 stateView = true;
@@ -165,6 +161,8 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                 return true;
             }
         });
+
+
         holder.lnl_items.setBackgroundColor(Color.WHITE);
     }
 
@@ -185,7 +183,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         return bitmap;
     }
 
-    public void changeBackGround(boolean isSelect) {
+    public void changeBackGroundItems(boolean isSelect) {
         for (int i = 0; i < folders.size(); i++) {
             folders.get(i).setSelected(isSelect);
             notifyItemChanged(i);
