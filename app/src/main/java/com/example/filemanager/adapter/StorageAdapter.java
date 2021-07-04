@@ -31,7 +31,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     private Context context;
     private OnItemClickListener callback;
     public ArrayList<String> selectListPath;
-    private boolean stateView = false;
+    public boolean stateView = false;
 
     public StorageAdapter(ArrayList<Folder> folders, Context context, OnItemClickListener callback) {
         this.folders = folders;
@@ -188,5 +188,9 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             folders.get(i).setSelected(isSelect);
             notifyItemChanged(i);
         }
+    }
+
+    public void resetStage() {
+        stateView = false;
     }
 }

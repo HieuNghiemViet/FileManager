@@ -246,6 +246,8 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                 }
             }
         }
+        adapter.resetStage();
+        btn_add.setVisibility(View.VISIBLE);
         if (arrayList.isEmpty()) {
             rcv_storage.setVisibility(View.INVISIBLE);
             emptyView.setVisibility(View.VISIBLE);
@@ -406,14 +408,10 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                                     }
                                 }
                             }
-
                             zipManager.zipFile(new Folder(StorageActivity.this, file.getAbsoluteFile(), file.getName(), file.getAbsolutePath()));
-
                             adapter.changeBackGroundItems(false);
                             lnl_menu.setVisibility(View.INVISIBLE);
                             adapter.selectListPath.clear();
-                            //delete(file.getAbsolutePath());
-                            Log.d("HieuNV", "file.getAbsolutePath(): " + file.getAbsolutePath());
                             dialog.dismiss();
                         }
                     }
@@ -442,12 +440,15 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
 
 
     @Override
-    public void OnZipComplete() {
+    public void OnZipComplete(String path) {
+        delete(path);
         repaintUI(listPaths.get(listPaths.size() - 1));
     }
 
+
     @Override
     public void OnUnZipComplete() {
+
         repaintUI(listPaths.get(listPaths.size() - 1));
     }
 

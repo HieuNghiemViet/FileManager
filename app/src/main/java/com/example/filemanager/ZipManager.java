@@ -37,7 +37,6 @@ public class ZipManager {
     private int hCount = 0;
     private boolean continueZipFile = true;
     private String unzipPath;
-    private StorageActivity storageActivity;
 
     public ZipManager(Context context, CallBackZipListener listener) {
         this.context = context;
@@ -154,7 +153,7 @@ public class ZipManager {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             progressDialog.dismiss();
-            listener.OnZipComplete();
+            listener.OnZipComplete(folderTmp.getPathFolder());
         }
 
     }
@@ -282,7 +281,6 @@ public class ZipManager {
 }
 
 interface CallBackZipListener {
-    void OnZipComplete();
-
+    void OnZipComplete(String path);
     void OnUnZipComplete();
 }
