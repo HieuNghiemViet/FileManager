@@ -44,6 +44,18 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
             tv_name_app = itemView.findViewById(R.id.item_name_app);
             tv_packageName_app = itemView.findViewById(R.id.item_packageName_app);
             tv_size_app = itemView.findViewById(R.id.item_size_app);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+            iv_img_app.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    callback.onClick(getAdapterPosition());
+                }
+            });
         }
     }
 
@@ -62,18 +74,8 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         holder.tv_name_app.setText(application.getNameApp());
         holder.tv_packageName_app.setText(application.getPackageApp());
         holder.tv_size_app.setText(Formatter.formatShortFileSize(context, application.getSizeApp()));
+        Glide.with(context).load(application.getImageApp()).into(holder.iv_img_app);
 
-        Glide.with(context)
-                .load(application.getImageApp())
-                .into(holder.iv_img_app);
-
-        holder.iv_img_app.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                    callback.onClick(position);
-
-            }
-        });
     }
 
     @Override

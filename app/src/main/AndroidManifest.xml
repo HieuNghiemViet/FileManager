@@ -24,14 +24,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FileManager">
-        <activity android:name=".StorageActivity"></activity>
-        <activity android:name=".DocumentActivity" />
-        <activity android:name=".ApplicationActivity" />
-        <activity android:name=".VideoActivity" />
-        <activity android:name=".DetailImageActivity" />
-        <activity android:name=".SongActivity" />
-        <activity android:name=".ImageActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".activity.StorageActivity"></activity>
+        <activity android:name=".activity.DocumentActivity" />
+        <activity android:name=".activity.ApplicationActivity" />
+        <activity android:name=".activity.VideoActivity" />
+        <activity android:name=".activity.DetailImageActivity" />
+        <activity android:name=".activity.SongActivity" />
+        <activity android:name=".activity.ImageActivity" />
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

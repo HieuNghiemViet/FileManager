@@ -1,19 +1,14 @@
-package com.example.filemanager;
+package com.example.filemanager.util;
 
-import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.format.Formatter;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.View;
-import android.widget.Toast;
 
-import com.example.filemanager.adapter.StorageAdapter;
+import com.example.filemanager.callback.CallBackZipListener;
 import com.example.filemanager.model.Folder;
 
 import java.io.BufferedInputStream;
@@ -278,9 +273,4 @@ public class ZipManager {
         }
         return size;
     }
-}
-
-interface CallBackZipListener {
-    void OnZipComplete(String path);
-    void OnUnZipComplete();
 }

@@ -1,4 +1,4 @@
-package com.example.filemanager;
+package com.example.filemanager.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.example.filemanager.R;
 import com.example.filemanager.model.Folder;
 import com.example.filemanager.model.Image;
 

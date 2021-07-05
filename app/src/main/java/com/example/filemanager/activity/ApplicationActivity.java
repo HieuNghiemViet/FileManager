@@ -1,37 +1,24 @@
-package com.example.filemanager;
+package com.example.filemanager.activity;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.annotation.SuppressLint;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.text.format.Formatter;
-import android.util.Log;
-import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.filemanager.R;
 import com.example.filemanager.adapter.ApplicationAdapter;
-import com.example.filemanager.adapter.SongAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Application;
-import com.example.filemanager.model.Image;
 
 import java.io.File;
-import java.lang.reflect.Method;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 

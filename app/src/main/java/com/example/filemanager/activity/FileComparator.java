@@ -1,4 +1,4 @@
-package com.example.filemanager;
+package com.example.filemanager.activity;
 
 import java.io.File;
 import java.util.Comparator;

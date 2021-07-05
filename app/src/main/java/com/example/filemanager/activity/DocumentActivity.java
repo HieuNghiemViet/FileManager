@@ -1,4 +1,4 @@
-package com.example.filemanager;
+package com.example.filemanager.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.filemanager.R;
 import com.example.filemanager.adapter.DocumentAdapter;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Document;

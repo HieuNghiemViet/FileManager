@@ -1,4 +1,4 @@
-package com.example.filemanager;
+package com.example.filemanager.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -12,7 +12,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.filemanager.R;
+
+public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageView imageLogo;
@@ -25,9 +27,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        askForPermission();
-        setContentView(R.layout.activity_main);
 
+    }
+
+    @Override
+    protected int getLayoutResource() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    public void initView() {
         imageLogo = (ImageView) findViewById(R.id.img_logo_image);
         imageVideo = (ImageView) findViewById(R.id.img_logo_video);
         imageSound = (ImageView) findViewById(R.id.img_logo_sound);
@@ -35,54 +44,17 @@ public class MainActivity extends AppCompatActivity {
         imageApp = (ImageView) findViewById(R.id.img_logo_app);
         imageStorage = (ImageView) findViewById(R.id.img_logo_storage);
 
-        imageLogo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        imageLogo.setOnClickListener(this);
+        imageVideo.setOnClickListener(this);
+        imageSound.setOnClickListener(this);
+        imageDocuments.setOnClickListener(this);
+        imageApp.setOnClickListener(this);
+        imageStorage.setOnClickListener(this);
+    }
 
-                Intent intent = new Intent(MainActivity.this, ImageActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        imageSound.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, SongActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        imageVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        imageDocuments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, DocumentActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        imageApp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ApplicationActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        imageStorage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, StorageActivity.class);
-                startActivity(intent);
-            }
-        });
+    @Override
+    protected void initData() {
+        askForPermission();
     }
 
     public void askForPermission() {
@@ -105,6 +77,29 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
             }
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == imageLogo) {
+            Intent intent = new Intent(MainActivity.this, ImageActivity.class);
+            startActivity(intent);
+        } else if (v == imageSound) {
+            Intent intent = new Intent(MainActivity.this, SongActivity.class);
+            startActivity(intent);
+        } else if (v == imageVideo) {
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+            startActivity(intent);
+        } else if (v == imageDocuments) {
+            Intent intent = new Intent(MainActivity.this, DocumentActivity.class);
+            startActivity(intent);
+        } else if (v == imageApp) {
+            Intent intent = new Intent(MainActivity.this, ApplicationActivity.class);
+            startActivity(intent);
+        } else if (v == imageStorage) {
+            Intent intent = new Intent(MainActivity.this, StorageActivity.class);
+            startActivity(intent);
         }
     }
 }
