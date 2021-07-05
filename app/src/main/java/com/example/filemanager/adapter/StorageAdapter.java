@@ -162,7 +162,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
             }
         });
 
-
         holder.lnl_items.setBackgroundColor(Color.WHITE);
     }
 
@@ -170,6 +169,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     public int getItemCount() {
         return folders.size();
     }
+
 
     private Bitmap getAlbumImage(String path) {
         MediaMetadataRetriever mdr = new MediaMetadataRetriever();

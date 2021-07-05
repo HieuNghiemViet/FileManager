@@ -30,7 +30,6 @@ public class SettingView extends RelativeLayout {
     }
 
     private void initData() {
-
     }
 
     public boolean isOpening() {
@@ -49,7 +48,6 @@ public class SettingView extends RelativeLayout {
                 public void onAnimationEnd(Animator animation) {
                     initData();
                 }
-
 
                 @Override
                 public void onAnimationCancel(Animator animation) {

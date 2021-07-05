@@ -5,14 +5,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.filemanager.R;
+import com.example.filemanager.view.custom.ImageStorageView;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
 
@@ -23,6 +27,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private ImageView imageDocuments;
     private ImageView imageApp;
     private ImageView imageStorage;
+    private ImageStorageView imageStorageView;
+    private int DELETE_REQUEST_CODE = 123;
+    private int RENAME_REQUEST_CODE = 300;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +50,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         imageDocuments = (ImageView) findViewById(R.id.img_logo_documents);
         imageApp = (ImageView) findViewById(R.id.img_logo_app);
         imageStorage = (ImageView) findViewById(R.id.img_logo_storage);
+        imageStorageView = findViewById(R.id.activity_image_view);
 
         imageLogo.setOnClickListener(this);
         imageVideo.setOnClickListener(this);
@@ -83,8 +91,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (v == imageLogo) {
-            Intent intent = new Intent(MainActivity.this, ImageActivity.class);
-            startActivity(intent);
+            imageStorageView.openView();
+
         } else if (v == imageSound) {
             Intent intent = new Intent(MainActivity.this, SongActivity.class);
             startActivity(intent);
@@ -100,6 +108,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (v == imageStorage) {
             Intent intent = new Intent(MainActivity.this, StorageActivity.class);
             startActivity(intent);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == DELETE_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                imageStorageView.deleteImage();
+            }
+        }
+        if ((requestCode == RENAME_REQUEST_CODE)) {
+            if (resultCode == Activity.RESULT_OK) {
+                imageStorageView.renameImage();
+            }
         }
     }
 }
