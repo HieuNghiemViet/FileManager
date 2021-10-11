@@ -40,14 +40,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
         }
     }
 
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.item_video, parent, false);
-        ViewHolder viewHolder = new ViewHolder(view);
-        return viewHolder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_video, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override

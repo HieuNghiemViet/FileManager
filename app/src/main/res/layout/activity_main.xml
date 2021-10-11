@@ -155,4 +155,29 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+
+    <com.example.filemanager.view.custom.SongStorageView
+        android:id="@+id/activity_song_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <com.example.filemanager.view.custom.VideoStorageView
+        android:id="@+id/activity_video_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <com.example.filemanager.view.custom.ApplicationStorageView
+        android:id="@+id/activity_application_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <com.example.filemanager.view.custom.DocumentStorageView
+        android:id="@+id/activity_document_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
 </RelativeLayout>

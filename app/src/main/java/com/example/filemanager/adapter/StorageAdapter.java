@@ -40,7 +40,6 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
         this.selectListPath = new ArrayList<>();
     }
 
-
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tv_nameFolder;
         private TextView tv_numberFile;
@@ -166,7 +165,7 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
     }
 
     @Override
-    public int getItemCount() {
+    public int getItemCount()  {
         return folders.size();
     }
 

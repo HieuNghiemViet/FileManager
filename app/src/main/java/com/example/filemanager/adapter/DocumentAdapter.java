@@ -39,17 +39,13 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             iv_document = itemView.findViewById(R.id.iv_document);
             tv_documentName = itemView.findViewById(R.id.tv_name_document);
             tv_documentSize = itemView.findViewById(R.id.tv_size_document);
-
         }
     }
 
     @Override
     public DocumentAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.item_document, parent, false);
-        ViewHolder viewHolder = new ViewHolder(view);
-        return viewHolder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_document, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override

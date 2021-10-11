@@ -18,9 +18,11 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +41,8 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.R;
+import com.example.filemanager.activity.DetailImageActivity;
+import com.example.filemanager.activity.MainActivity;
 import com.example.filemanager.adapter.ImageAdapter;
 import com.example.filemanager.animation.MoveAnimation;
 import com.example.filemanager.callback.OnItemClickListener;
@@ -71,7 +75,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     private EditText edt_rename;
     private Image imageTmp;
     private SwipeRefreshLayout swipe;
-
+    
     public ImageStorageView(Context context) {
         super(context);
         mContext = context;
@@ -89,7 +93,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rootView = inflater.inflate(R.layout.image_storage_view, this);
         recyclerView = (RecyclerView) rootView.findViewById(R.id.rcv_image_view);
-        swipe = (SwipeRefreshLayout) rootView.findViewById(R.id.SwipeRefreshLayoutImage);
+        swipe = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayoutImage);
     }
 
     private void initData() {
@@ -98,7 +102,12 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
 
     @Override
     public void onClick(int position) {
-
+        Intent intent = new Intent(mContext, DetailImageActivity.class);
+        Image image = arrayList.get(position);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("image", image);
+        intent.putExtras(bundle);
+        mContext.startActivity(intent);
     }
 
     @Override
@@ -280,7 +289,12 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         try {
             Long id = getIdDownloadFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
+            Log.d("HieuNV", "extDownloadUri: " + extDownloadUri);
+            Log.d("HieuNV", "id: " + id);
+            Log.d("HieuNV", "displayName: " + displayName);
+
             Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
+
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.Files.FileColumns.IS_PENDING, 1);
             contentValues.clear();
@@ -305,7 +319,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -363,7 +377,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE, null, 0, 0, 0, null);
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE, null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
                         securityException.getMessage(), securityException);
@@ -439,7 +453,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                     }
                     IntentSender intentSender = recoverableSecurityException.getUserAction()
                             .getActionIntent().getIntentSender();
-                    startIntentSenderForResult(intentSender, DELETE_REQUEST_CODE,
+                    MainActivity.sMainActivity.startIntentSenderForResult(intentSender, DELETE_REQUEST_CODE,
                             null, 0, 0, 0, null);
                 } else {
                     throw new RuntimeException(
@@ -564,11 +578,12 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
 
     public void renameImage() {
         try {
-            renameFileDownloadUsingDisplayName(mContext, imageTmp.getDisplayName());
             renameFileStorageUsingDisplayName(mContext, imageTmp.getDisplayName());
+            renameFileDownloadUsingDisplayName(mContext, imageTmp.getDisplayName());
         } catch (IntentSender.SendIntentException e) {
             e.printStackTrace();
         }
     }
+
 
 }

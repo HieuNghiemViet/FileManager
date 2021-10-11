@@ -1,14 +1,6 @@
-package com.example.filemanager.activity;
+package com.example.filemanager.view.custom;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
-import android.app.Activity;
+import android.animation.Animator;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
@@ -26,25 +18,36 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
+import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.example.filemanager.R;
-import com.example.filemanager.adapter.VideoAdapter;
-import com.example.filemanager.callback.OnItemClickListener;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.example.filemanager.R;
+import com.example.filemanager.activity.MainActivity;
+import com.example.filemanager.adapter.VideoAdapter;
+import com.example.filemanager.animation.MoveAnimation;
+import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Video;
+import com.example.filemanager.util.ScreenUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.BuildConfig;
 
-public class VideoActivity extends AppCompatActivity implements OnItemClickListener {
+public class VideoStorageView extends RelativeLayout implements OnItemClickListener {
     private static Uri extStorageUri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private int EDIT_REQUEST_CODE = 1111;
@@ -63,25 +66,92 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     private TextView tv_rename_ok;
     private EditText edt_rename;
     private SwipeRefreshLayout swipe;
+    private Context mContext;
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_video);
+    public VideoStorageView(Context context) {
+        super(context);
+        mContext = context;
         initView();
+    }
+
+    public VideoStorageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mContext = context;
+        initView();
+    }
+
+
+
+    public void initView() {
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View rootView = inflater.inflate(R.layout.video_storage_view, this);
+        rcv_video = (RecyclerView) rootView.findViewById(R.id.rcv_video_view);
+        swipe = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayoutVideo);
+
+    }
+
+    private void initData() {
         setDataAdapter();
     }
 
-    public void initView() {
-        rcv_video = (RecyclerView) findViewById(R.id.rcv_video);
-        swipe = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutVideo);
+    public boolean isOpening() {
+        return getVisibility() == VISIBLE;
+    }
+
+    public void openView() {
+        if (getVisibility() == GONE) {
+            MoveAnimation.openViewFromRight(this, ScreenUtils.getScreenWidth(mContext), 300, new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    setVisibility(VISIBLE);
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    initData();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+        }
+    }
+
+
+    public void closeView() {
+
+        MoveAnimation.closeViewToRight(this, ScreenUtils.getScreenWidth(mContext), 300, new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                setVisibility(GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
     }
 
 
     private void setDataAdapter() {
-
-        adapter = new VideoAdapter(arrayList, this, this);
+        adapter = new VideoAdapter(arrayList, mContext, this);
         getVideo();
         rcv_video.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
@@ -99,7 +169,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
 
     public void getVideo() {
         arrayList.clear();
-        ContentResolver contentResolver = getContentResolver();
+        ContentResolver contentResolver = mContext.getContentResolver();
         Uri videoUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
         Cursor videoCursor = contentResolver.query(videoUri, null, null, null, MediaStore.Video.Media.DATE_MODIFIED + " DESC");
         if (videoCursor != null && videoCursor.moveToFirst()) {
@@ -128,14 +198,14 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         videoTmp = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videoTmp.getPathVideo()));
         intent.setDataAndType(Uri.parse(videoTmp.getPathVideo()), "video/*");
-        startActivity(intent);
+        mContext.startActivity(intent);
     }
 
     @Override
     public void onLongClick(int position) {
         videoTmp = arrayList.get(position);
 
-        AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
+        AlertDialog.Builder myBuilder = new AlertDialog.Builder(mContext);
         final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
@@ -165,14 +235,14 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
         File videoFile = new File(video.getPathVideo());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("video/*");
-        Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", videoFile);
+        Uri photoURI = FileProvider.getUriForFile(mContext.getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", videoFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivity(Intent.createChooser(shareIntent, "Share"));
+        mContext.startActivity(Intent.createChooser(shareIntent, "Share"));
     }
 
     private void renameVideo(int gravity, Video video) {
-        final Dialog dialog = new Dialog(this);
+        final Dialog dialog = new Dialog(mContext);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_rename);
 
@@ -199,9 +269,9 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 try {
 
                     if (video.getPathVideo().contains("/storage/emulated/0/Download")) {
-                        renameFileDownloadUsingDisplayName(VideoActivity.this, video.getDisplayName());
+                        renameFileDownloadUsingDisplayName(mContext, video.getDisplayName());
                     } else {
-                        renameFileStorageUsingDisplayName(VideoActivity.this, video.getDisplayName());
+                        renameFileStorageUsingDisplayName(mContext, video.getDisplayName());
                     }
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
@@ -248,7 +318,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -261,7 +331,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     public Long getIdStorageFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+        Cursor cursor = mContext.getContentResolver().query(extStorageUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
 
         assert cursor != null;
@@ -307,7 +377,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -320,7 +390,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     private Long getIdDownloadFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
+        Cursor cursor = mContext.getContentResolver().query(extDownloadUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
         assert cursor != null;
         cursor.moveToFirst();
@@ -336,7 +406,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     }
 
     private void infoVideo(int gravity, Video video) {
-        final Dialog dialog = new Dialog(this);
+        final Dialog dialog = new Dialog(mContext);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_info_video);
 
@@ -456,7 +526,7 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                     }
                     IntentSender intentSender = recoverableSecurityException.getUserAction()
                             .getActionIntent().getIntentSender();
-                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
+                    MainActivity.sMainActivity.startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
                             null, 0, 0, 0, null);
                 } else {
                     throw new RuntimeException(
@@ -468,14 +538,14 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
     }
 
     public void deleteDialog(Video video) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("Delete Video")
                 .setMessage("You Are OK?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
-                            deleteFileUsingDisplayName(VideoActivity.this, video.getDisplayName());
+                            deleteFileUsingDisplayName(mContext, video.getDisplayName());
                         } catch (IntentSender.SendIntentException e) {
                             e.printStackTrace();
                         }
@@ -490,29 +560,4 @@ public class VideoActivity extends AppCompatActivity implements OnItemClickListe
                 });
         builder.create().show();
     }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == EDIT_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                try {
-                    deleteFileUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        if ((requestCode == RENAME_REQUEST_CODE)) {
-            if (resultCode == Activity.RESULT_OK) {
-                try {
-                    renameFileDownloadUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
-                    renameFileStorageUsingDisplayName(VideoActivity.this, videoTmp.getDisplayName());
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
 }

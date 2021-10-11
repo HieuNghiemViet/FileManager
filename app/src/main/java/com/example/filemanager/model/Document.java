@@ -1,6 +1,5 @@
 package com.example.filemanager.model;
 
-import android.widget.ImageView;
 
 public class Document {
     private String documentName;

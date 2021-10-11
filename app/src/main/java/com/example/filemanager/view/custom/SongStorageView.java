@@ -1,13 +1,6 @@
-package com.example.filemanager.activity;
+package com.example.filemanager.view.custom;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
+import android.animation.Animator;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
@@ -24,16 +17,31 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.example.filemanager.R;
+import com.example.filemanager.activity.MainActivity;
 import com.example.filemanager.adapter.SongAdapter;
+import com.example.filemanager.animation.MoveAnimation;
 import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Song;
+import com.example.filemanager.util.ScreenUtils;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -41,11 +49,13 @@ import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.BuildConfig;
 
-public class SongActivity extends AppCompatActivity implements OnItemClickListener {
-    private static Uri extStorageUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
-    private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
+
+public class SongStorageView extends RelativeLayout implements OnItemClickListener {
     private int RENAME_REQUEST_CODE = 1000;
     private int EDIT_REQUEST_CODE = 111;
+    private Context mContext;
+    private static Uri extStorageUri = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+    private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private ArrayList<Song> arrayList = new ArrayList<>();
     private Song songTmp;
     private RecyclerView recyclerView;
@@ -62,22 +72,85 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     private TextView edt_rename;
     private SwipeRefreshLayout swipe;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_song);
+    public SongStorageView(Context context) {
+        super(context);
+        mContext = context;
         initView();
-        setDataAdapter();
+    }
+
+    public SongStorageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mContext = context;
+        initView();
     }
 
     private void initView() {
-        recyclerView = (RecyclerView) findViewById(R.id.rcv_song);
-        swipe = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayoutSong);
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View rootView = inflater.inflate(R.layout.song_storage_view, this);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.rcv_song_view);
+        swipe = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayoutSong);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void initData() {
+        setDataAdapter();
+    }
+
+    public boolean isOpening() {
+        return getVisibility() == VISIBLE;
+    }
+
+    public void openView() {
+        if (getVisibility() == GONE) {
+            MoveAnimation.openViewFromRight(this, ScreenUtils.getScreenWidth(mContext), 300, new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    setVisibility(VISIBLE);
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    initData();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+        }
+    }
+
+    public void closeView() {
+
+        MoveAnimation.closeViewToRight(this, ScreenUtils.getScreenWidth(mContext), 300, new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                setVisibility(GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+    }
+
     private void setDataAdapter() {
-        adapter = new SongAdapter(arrayList, this, this);
+        adapter = new SongAdapter(arrayList, mContext, this);
         getMusic();
         recyclerView.setAdapter(adapter);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
@@ -94,7 +167,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
     public void getMusic() {
         arrayList.clear();
-        ContentResolver contentResolver = getContentResolver();
+        ContentResolver contentResolver = mContext.getContentResolver();
 
         Uri songUri;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -131,7 +204,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                         currentDate,
                         currentDuration,
                         currentDisplay));
-               // Log.d("HieuNV", "" + currentName);
+
             } while (songCursor.moveToNext());
         }
     }
@@ -141,7 +214,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         songTmp = arrayList.get(position);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songTmp.getPath()));
         intent.setDataAndType(Uri.parse(songTmp.getPath()), "audio/*");
-        startActivity(intent);
+        mContext.startActivity(intent);
 
     }
 
@@ -149,7 +222,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     public void onLongClick(int position) {
         songTmp = arrayList.get(position);
 
-        AlertDialog.Builder myBuilder = new AlertDialog.Builder(this);
+        AlertDialog.Builder myBuilder = new AlertDialog.Builder(mContext);
         final String[] feature = {"Thông tin", "Đổi tên", "Xóa", "Chia Sẻ"};
 
         myBuilder.setItems(feature, new DialogInterface.OnClickListener() {
@@ -176,7 +249,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
 
     private void renameSong(int gravity, Song song) {
-        final Dialog dialog = new Dialog(this);
+        final Dialog dialog = new Dialog(mContext);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_rename);
 
@@ -205,9 +278,9 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
 
                 try {
                     if (song.getPath().contains("/storage/emulated/0/Download")) {
-                        renameFileDownloadUsingDisplayName(SongActivity.this, song.getDisplayName());
+                        renameFileDownloadUsingDisplayName(mContext, song.getDisplayName());
                     } else {
-                        renameFileStorageUsingDisplayName(SongActivity.this, song.getDisplayName());
+                        renameFileStorageUsingDisplayName(mContext, song.getDisplayName());
                     }
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
@@ -253,7 +326,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -266,7 +339,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     public Long getIdDownloadFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extDownloadUri, projection,
+        Cursor cursor = mContext.getContentResolver().query(extDownloadUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
 
         assert cursor != null;
@@ -311,7 +384,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -324,7 +397,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     public Long getIdStorageFromDisplayName(String displayName) {
         String[] projection;
         projection = new String[]{MediaStore.Files.FileColumns._ID};
-        Cursor cursor = getContentResolver().query(extStorageUri, projection,
+        Cursor cursor = mContext.getContentResolver().query(extStorageUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
 
         assert cursor != null;
@@ -345,10 +418,10 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         File songFile = new File(song.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("song/*");
-        Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", songFile);
+        Uri photoURI = FileProvider.getUriForFile(mContext.getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", songFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivity(Intent.createChooser(shareIntent, "Share"));
+        mContext.startActivity(Intent.createChooser(shareIntent, "Share"));
     }
 
     public Uri getUriFromDisplayName(Context context, String displayName) {
@@ -396,7 +469,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
                     }
                     IntentSender intentSender = recoverableSecurityException.getUserAction()
                             .getActionIntent().getIntentSender();
-                    startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
+                    MainActivity.sMainActivity.startIntentSenderForResult(intentSender, EDIT_REQUEST_CODE,
                             null, 0, 0, 0, null);
                 } else {
                     throw new RuntimeException(
@@ -408,14 +481,14 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     public void deleteDialog(Song song) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setTitle("Delete Song")
                 .setMessage("You Are OK?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
-                            deleteFileUsingDisplayName(SongActivity.this, song.getDisplayName());
+                            deleteFileUsingDisplayName(mContext, song.getDisplayName());
                         } catch (IntentSender.SendIntentException e) {
                             e.printStackTrace();
                         }
@@ -455,7 +528,7 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void infoSong(int gravity, Song song) {
-        final Dialog dialog = new Dialog(this);
+        final Dialog dialog = new Dialog(mContext);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_dialog_info_song);
 
@@ -528,27 +601,4 @@ public class SongActivity extends AppCompatActivity implements OnItemClickListen
         return out;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == EDIT_REQUEST_CODE) {
-            if (resultCode == SongActivity.RESULT_OK) {
-                try {
-                    deleteFileUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        if (requestCode == RENAME_REQUEST_CODE) {
-            if (resultCode == SongActivity.RESULT_OK) {
-                try {
-                    renameFileStorageUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
-                    renameFileDownloadUsingDisplayName(SongActivity.this, songTmp.getDisplayName());
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }

@@ -48,11 +48,8 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View songView = inflater.inflate(R.layout.item_song, parent, false);
-        ViewHolder viewHolder = new ViewHolder(songView);
-        return viewHolder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_song, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -67,14 +64,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> {
                 .placeholder(R.drawable.compact_disc)
                 .into(holder.ivSong);
 
-        holder.ivSong.setOnClickListener(new View.OnClickListener() {
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 callback.onClick(position);
             }
         });
 
-        holder.ivSong.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 callback.onLongClick(position);
