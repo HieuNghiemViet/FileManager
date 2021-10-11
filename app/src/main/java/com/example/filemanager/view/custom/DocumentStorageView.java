@@ -3,6 +3,7 @@ package com.example.filemanager.view.custom;
 import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -56,6 +57,7 @@ public class DocumentStorageView extends RelativeLayout implements OnItemClickLi
     }
 
     private void initData() throws IOException {
+        arrayList.clear();
         Search_Dir(Environment.getExternalStorageDirectory());
         setDataAdapter();
     }
@@ -80,7 +82,6 @@ public class DocumentStorageView extends RelativeLayout implements OnItemClickLi
                         e.printStackTrace();
                     }
                 }
-
                 @Override
                 public void onAnimationCancel(Animator animation) {
                 }
@@ -122,7 +123,6 @@ public class DocumentStorageView extends RelativeLayout implements OnItemClickLi
 
     public void Search_Dir(File dir) throws IOException {
         File FileList[] = dir.listFiles();
-
         if (FileList != null) {
             for (int i = 0; i < FileList.length; i++) {
                 if (FileList[i].isDirectory()) {
@@ -131,34 +131,25 @@ public class DocumentStorageView extends RelativeLayout implements OnItemClickLi
                     documentUrl = FileList[i].toURL();
                     URLConnection urlConnection = documentUrl.openConnection();
                     urlConnection.connect();
-
                     if (FileList[i].getName().endsWith(".pdf")) {
                         documentName = FileList[i].getName();
                         documentSize = urlConnection.getContentLength();
                         arrayList.add(new Document(documentName, documentSize, R.drawable.ic_pdf));
-                        Log.d("HieuNV", "documentName: " + documentName);
-                        Log.d("HieuNV", "documentSize:  " + documentSize);
 
                     } else if (FileList[i].getName().endsWith(".docx")) {
                         documentName = FileList[i].getName();
                         documentSize = urlConnection.getContentLength();
                         arrayList.add(new Document(documentName, documentSize, R.drawable.ic_docx_file_format_symbol));
-                        Log.d("HieuNV", "documentName: " + documentName);
-                        Log.d("HieuNV", "documentSize:  " + documentSize);
 
                     } else if (FileList[i].getName().endsWith(".doc")) {
                         documentName = FileList[i].getName();
                         documentSize = urlConnection.getContentLength();
                         arrayList.add(new Document(documentName, documentSize, 0));
-                        Log.d("HieuNV", "documentName: " + documentName);
-                        Log.d("HieuNV", "documentSize:  " + documentSize);
 
                     } else if (FileList[i].getName().endsWith(".txt")) {
                         documentName = FileList[i].getName();
                         documentSize = urlConnection.getContentLength();
                         arrayList.add(new Document(documentName, documentSize, R.drawable.ic_txt_file_symbol));
-                        Log.d("HieuNV", "documentName: " + documentName);
-                        Log.d("HieuNV", "documentSize:  " + documentSize);
                     }
                 }
             }

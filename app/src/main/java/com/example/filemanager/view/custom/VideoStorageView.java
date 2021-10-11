@@ -560,4 +560,8 @@ public class VideoStorageView extends RelativeLayout implements OnItemClickListe
                 });
         builder.create().show();
     }
+
+    public void deleteVideo() throws IntentSender.SendIntentException {
+        deleteFileUsingDisplayName(mContext, videoTmp.getDisplayName());
+    }
 }

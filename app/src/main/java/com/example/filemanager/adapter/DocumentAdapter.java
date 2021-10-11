@@ -62,7 +62,6 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             @Override
             public void onClick(View v) {
                     callback.onClick(position);
-
             }
         });
     }
@@ -71,6 +70,4 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     public int getItemCount() {
         return documents.size();
     }
-
-
 }

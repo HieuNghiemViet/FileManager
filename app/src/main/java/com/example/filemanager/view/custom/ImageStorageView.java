@@ -1,5 +1,6 @@
 package com.example.filemanager.view.custom;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.app.Activity;
 import android.app.Dialog;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -49,6 +51,7 @@ import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Image;
 import com.example.filemanager.util.ScreenUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -59,8 +62,8 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     private Context mContext;
     private static Uri extStorageUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
-    private int DELETE_REQUEST_CODE = 123;
-    private int RENAME_REQUEST_CODE = 300;
+    private int DELETE_REQUEST_CODE = 100;
+    private int RENAME_REQUEST_CODE = 200;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
     private ImageAdapter adapter;
@@ -75,7 +78,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     private EditText edt_rename;
     private Image imageTmp;
     private SwipeRefreshLayout swipe;
-    
+
     public ImageStorageView(Context context) {
         super(context);
         mContext = context;
@@ -291,7 +294,6 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
             ContentResolver resolver = context.getContentResolver();
             Log.d("HieuNV", "extDownloadUri: " + extDownloadUri);
             Log.d("HieuNV", "id: " + id);
-            Log.d("HieuNV", "displayName: " + displayName);
 
             Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
 
@@ -489,6 +491,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         builder.create().show();
     }
 
+    //FIX share image
     private void shareImage(Image image) {
         File imgFile = new File(image.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -567,6 +570,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
 //            }
 //        }
 //    }
+
 
     public void deleteImage() {
         try {

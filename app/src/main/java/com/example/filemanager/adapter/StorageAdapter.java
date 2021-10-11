@@ -133,12 +133,12 @@ public class StorageAdapter extends RecyclerView.Adapter<StorageAdapter.ViewHold
                         selectListPath.remove(folder.getPathFolder());
                     }
                 }
+
                 callback.onLongClick(position);
                 if(selectListPath.size() == 0){
                     stateView = false;
                 }
             }
-
         });
 
         holder.lnl_items.setOnLongClickListener(new View.OnLongClickListener() {

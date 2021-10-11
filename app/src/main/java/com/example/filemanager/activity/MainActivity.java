@@ -7,6 +7,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
@@ -22,9 +23,8 @@ import com.example.filemanager.view.custom.VideoStorageView;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
     private static final int MY_PERMISSION_REQUEST = 1;
-    private static final int DELETE_REQUEST_CODE = 123;
-    private static final int RENAME_REQUEST_CODE = 300;
-    private static final int EDIT_REQUEST_CODE = 111;
+    public static final int DELETE_REQUEST_CODE = 123;
+    public static final int RENAME_REQUEST_CODE = 300;
     private ImageView imageLogo;
     private ImageView imageVideo;
     private ImageView imageSound;
@@ -108,7 +108,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (v == imageVideo) {
             videoStorageView.openView();
         } else if (v == imageDocuments) {
-           documentStorageView.openView();
+            documentStorageView.openView();
         } else if (v == imageApp) {
             applicationStorageView.openView();
         } else if (v == imageStorage) {
@@ -129,26 +129,28 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             applicationStorageView.closeView();
         } else if (documentStorageView.isOpening()) {
             documentStorageView.closeView();
+        } else {
+            Intent startMain = new Intent(Intent.ACTION_MAIN);
+            startMain.addCategory(Intent.CATEGORY_HOME);
+            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(startMain);
         }
 
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == DELETE_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                imageStorageView.deleteImage();
-            }
-        }
-        if ((requestCode == RENAME_REQUEST_CODE)) {
-            if (resultCode == Activity.RESULT_OK) {
-                imageStorageView.renameImage();
-            }
+        if (requestCode == DELETE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            imageStorageView.deleteImage();
+//            try {
+//                videoStorageView.deleteVideo();
+//            } catch (IntentSender.SendIntentException e) {
+//                e.printStackTrace();
+//            }
         }
 
-        if (requestCode == EDIT_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-            }
+        if ((requestCode == RENAME_REQUEST_CODE && resultCode == Activity.RESULT_OK)) {
+            imageStorageView.renameImage();
         }
     }
 

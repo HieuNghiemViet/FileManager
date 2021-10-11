@@ -61,6 +61,7 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
     }
 
     private void initData() throws PackageManager.NameNotFoundException {
+        arrayList.clear();
         getApp();
         setDataAdapter();
     }
@@ -131,6 +132,7 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
                 setDataAdapter();
             }
         });
+
     }
 
     public void getApp() throws PackageManager.NameNotFoundException {
@@ -153,6 +155,7 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
                 packageName, 0).publicSourceDir).length();
     }
 
+    //Fix ve lai adapter khi go ung dung
     @Override
     public void onClick(int position) {
         Application application = arrayList.get(position);
@@ -160,10 +163,12 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
         uninstallIntent.setData(Uri.parse("package:" + application.getPackageApp()));
         uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
         MainActivity.sMainActivity.startActivityForResult(uninstallIntent, DELETE_REQUEST_CODE);
+
+
+        adapter.notifyItemChanged(position);
     }
 
     @Override
     public void onLongClick(int position) {
     }
-
 }

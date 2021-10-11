@@ -268,7 +268,7 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
         if (adapter.selectListPath.size() > 0) {
             lnl_menu.setVisibility(View.VISIBLE);
             btn_add.setVisibility(View.INVISIBLE);
-        } else {
+        } if (adapter.selectListPath.size() <= 0) {
             lnl_menu.setVisibility(View.INVISIBLE);
             btn_add.setVisibility(View.VISIBLE);
         }

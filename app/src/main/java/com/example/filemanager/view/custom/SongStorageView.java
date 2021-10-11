@@ -215,7 +215,6 @@ public class SongStorageView extends RelativeLayout implements OnItemClickListen
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(songTmp.getPath()));
         intent.setDataAndType(Uri.parse(songTmp.getPath()), "audio/*");
         mContext.startActivity(intent);
-
     }
 
     @Override
