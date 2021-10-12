@@ -400,7 +400,6 @@ public class StorageActivity extends AppCompatActivity implements OnItemClickLis
                         if (isEmptyString(folderName)) {
                             Toast.makeText(StorageActivity.this, "Name Must Not Be Left Blank", Toast.LENGTH_LONG).show();
                         } else {
-                            //FIX logic
                             File file = new File(listPaths.get(listPaths.size() - 1), folderName);
                             if (!file.exists()) {
                                 if (file.mkdir()) {

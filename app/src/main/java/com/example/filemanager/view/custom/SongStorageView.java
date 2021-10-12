@@ -1,6 +1,7 @@
 package com.example.filemanager.view.custom;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
@@ -417,7 +418,7 @@ public class SongStorageView extends RelativeLayout implements OnItemClickListen
         File songFile = new File(song.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("song/*");
-        Uri photoURI = FileProvider.getUriForFile(mContext.getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", songFile);
+        Uri photoURI = FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName() + ".provider", songFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         mContext.startActivity(Intent.createChooser(shareIntent, "Share"));

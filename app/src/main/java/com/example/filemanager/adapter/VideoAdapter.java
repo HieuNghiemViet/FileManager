@@ -1,5 +1,6 @@
 package com.example.filemanager.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
@@ -47,7 +48,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(VideoAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(VideoAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Video video = videos.get(position);
         holder.tv_video.setText(video.getNameVideo());
 

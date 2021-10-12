@@ -1,6 +1,7 @@
 package com.example.filemanager.view.custom;
 
 import android.animation.Animator;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -8,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -155,20 +157,23 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
                 packageName, 0).publicSourceDir).length();
     }
 
-    //Fix ve lai adapter khi go ung dung
+
     @Override
     public void onClick(int position) {
+        Application application = arrayList.get(position);
+        Intent intent = mContext.getPackageManager().getLaunchIntentForPackage(application.getPackageApp());
+        if (intent != null) {
+            mContext.startActivity(intent);
+        }
+    }
+
+    //Fix ve lai adapter khi go ung dung
+    @Override
+    public void onLongClick(int position) {
         Application application = arrayList.get(position);
         Intent uninstallIntent = new Intent(Intent.ACTION_DELETE);
         uninstallIntent.setData(Uri.parse("package:" + application.getPackageApp()));
         uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
         MainActivity.sMainActivity.startActivityForResult(uninstallIntent, DELETE_REQUEST_CODE);
-
-
-        adapter.notifyItemChanged(position);
-    }
-
-    @Override
-    public void onLongClick(int position) {
     }
 }

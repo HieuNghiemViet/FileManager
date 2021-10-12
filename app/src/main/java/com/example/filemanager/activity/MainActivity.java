@@ -1,5 +1,6 @@
 package com.example.filemanager.activity;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -9,7 +10,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -142,16 +146,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == DELETE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             imageStorageView.deleteImage();
-//            try {
-//                videoStorageView.deleteVideo();
-//            } catch (IntentSender.SendIntentException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                videoStorageView.deleteVideo();
+            } catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+            }
         }
 
         if ((requestCode == RENAME_REQUEST_CODE && resultCode == Activity.RESULT_OK)) {
             imageStorageView.renameImage();
         }
+
     }
 
 }

@@ -1,8 +1,6 @@
 package com.example.filemanager.view.custom;
 
-import android.Manifest;
 import android.animation.Animator;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
@@ -20,6 +18,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
@@ -30,13 +30,11 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -51,8 +49,10 @@ import com.example.filemanager.callback.OnItemClickListener;
 import com.example.filemanager.model.Image;
 import com.example.filemanager.util.ScreenUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -288,13 +288,11 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         });
     }
 
+
     public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdDownloadFromDisplayName(displayName);
             ContentResolver resolver = context.getContentResolver();
-            Log.d("HieuNV", "extDownloadUri: " + extDownloadUri);
-            Log.d("HieuNV", "id: " + id);
-
             Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
 
             ContentValues contentValues = new ContentValues();
@@ -336,7 +334,6 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         projection = new String[]{MediaStore.Files.FileColumns._ID};
         Cursor cursor = mContext.getContentResolver().query(extDownloadUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-
         assert cursor != null;
         cursor.moveToFirst();
 
@@ -393,7 +390,6 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         projection = new String[]{MediaStore.Files.FileColumns._ID};
         Cursor cursor = mContext.getContentResolver().query(extStorageUri, projection,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", new String[]{displayName}, null);
-
         assert cursor != null;
         cursor.moveToFirst();
 
@@ -437,11 +433,12 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
             String[] selectionArgsPdf = new String[]{displayName};
 
             try {
-                //
                 if (resolver.delete(uri, MediaStore.Files.FileColumns.DISPLAY_NAME + "=?", selectionArgsPdf) > 0) {
                     arrayList.remove(imageTmp);
                     adapter.notifyDataSetChanged();
+
                 }
+
                 return true;
             } catch (SecurityException securityException) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -491,12 +488,11 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
         builder.create().show();
     }
 
-    //FIX share image
     private void shareImage(Image image) {
         File imgFile = new File(image.getPath());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("image/jpeg");
-        Uri photoURI = FileProvider.getUriForFile(mContext.getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", imgFile);
+        Uri photoURI = FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName() + ".provider", imgFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         mContext.startActivity(Intent.createChooser(shareIntent, "Share"));

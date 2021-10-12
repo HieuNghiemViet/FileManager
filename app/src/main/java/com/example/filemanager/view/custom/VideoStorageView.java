@@ -28,6 +28,7 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -235,7 +236,7 @@ public class VideoStorageView extends RelativeLayout implements OnItemClickListe
         File videoFile = new File(video.getPathVideo());
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("video/*");
-        Uri photoURI = FileProvider.getUriForFile(mContext.getApplicationContext(), BuildConfig.APPLICATION_ID + ".provider", videoFile);
+        Uri photoURI = FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName() + ".provider", videoFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         mContext.startActivity(Intent.createChooser(shareIntent, "Share"));
@@ -306,6 +307,7 @@ public class VideoStorageView extends RelativeLayout implements OnItemClickListe
             adapter.notifyDataSetChanged();
             getVideo();
             return true;
+
         } catch (SecurityException securityException) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 RecoverableSecurityException recoverableSecurityException;

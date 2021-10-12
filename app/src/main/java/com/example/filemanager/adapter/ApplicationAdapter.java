@@ -51,6 +51,14 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
                     callback.onClick(getAdapterPosition());
                 }
             });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    callback.onLongClick(getAdapterPosition());
+                    return false;
+                }
+            });
         }
     }
 
@@ -68,6 +76,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         holder.tv_size_app.setText(Formatter.formatShortFileSize(context, application.getSizeApp()));
         Glide.with(context).load(application.getImageApp())
                 .into(holder.iv_img_app);
+
 
     }
 
