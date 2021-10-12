@@ -32,16 +32,16 @@ import java.util.List;
 
 public class ApplicationStorageView extends RelativeLayout implements OnItemClickListener {
     private Context mContext;
-    private int DELETE_REQUEST_CODE = 1000;
     private Drawable iconApp;
     private String nameApp;
     private String packageApp;
     private long sizeApp;
     private RecyclerView recyclerView;
-    private ApplicationAdapter adapter;
-    private ArrayList<Application> arrayList = new ArrayList<>();
+    public ApplicationAdapter adapter;
+    public ArrayList<Application> arrayList = new ArrayList<>();
     private ApplicationInfo applicationInfo;
     private SwipeRefreshLayout swipe;
+    public int deletePosition;
 
     public ApplicationStorageView(Context context) {
         super(context);
@@ -167,13 +167,13 @@ public class ApplicationStorageView extends RelativeLayout implements OnItemClic
         }
     }
 
-    //Fix ve lai adapter khi go ung dung
     @Override
     public void onLongClick(int position) {
         Application application = arrayList.get(position);
         Intent uninstallIntent = new Intent(Intent.ACTION_DELETE);
         uninstallIntent.setData(Uri.parse("package:" + application.getPackageApp()));
         uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
-        MainActivity.sMainActivity.startActivityForResult(uninstallIntent, DELETE_REQUEST_CODE);
+        MainActivity.sMainActivity.startActivityForResult(uninstallIntent, MainActivity.DELETE_APP_REQUEST_CODE);
+        deletePosition = position;
     }
 }

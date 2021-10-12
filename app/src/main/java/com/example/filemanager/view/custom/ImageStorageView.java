@@ -23,7 +23,6 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,8 +31,6 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -62,8 +59,6 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     private Context mContext;
     private static Uri extStorageUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
     private static Uri extDownloadUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
-    private int DELETE_REQUEST_CODE = 100;
-    private int RENAME_REQUEST_CODE = 200;
     private RecyclerView recyclerView;
     private ArrayList<Image> arrayList = new ArrayList<>();
     private ImageAdapter adapter;
@@ -292,6 +287,9 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     public boolean renameFileDownloadUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdDownloadFromDisplayName(displayName);
+            if(id == null){
+                return false;
+            }
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extDownloadUri, id);
 
@@ -319,7 +317,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE,
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, MainActivity.RENAME_REQUEST_CODE,
                         null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
@@ -350,6 +348,9 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
     public boolean renameFileStorageUsingDisplayName(Context context, String displayName) throws IntentSender.SendIntentException {
         try {
             Long id = getIdStorageFromDisplayName(displayName);
+            if(id == null){
+                return false;
+            }
             ContentResolver resolver = context.getContentResolver();
             Uri mUri = ContentUris.withAppendedId(extStorageUri, id);
             ContentValues contentValues = new ContentValues();
@@ -376,7 +377,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                 }
                 IntentSender intentSender = recoverableSecurityException.getUserAction()
                         .getActionIntent().getIntentSender();
-                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, RENAME_REQUEST_CODE, null, 0, 0, 0, null);
+                MainActivity.sMainActivity.startIntentSenderForResult(intentSender, MainActivity.RENAME_REQUEST_CODE, null, 0, 0, 0, null);
             } else {
                 throw new RuntimeException(
                         securityException.getMessage(), securityException);
@@ -452,7 +453,7 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
                     }
                     IntentSender intentSender = recoverableSecurityException.getUserAction()
                             .getActionIntent().getIntentSender();
-                    MainActivity.sMainActivity.startIntentSenderForResult(intentSender, DELETE_REQUEST_CODE,
+                    MainActivity.sMainActivity.startIntentSenderForResult(intentSender, MainActivity.DELETE_REQUEST_CODE,
                             null, 0, 0, 0, null);
                 } else {
                     throw new RuntimeException(
@@ -584,6 +585,4 @@ public class ImageStorageView extends RelativeLayout implements OnItemClickListe
             e.printStackTrace();
         }
     }
-
-
 }
